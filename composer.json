@@ -1,7 +1,22 @@
 {
     "name": "qase/php-commons",
+    "description": "Library with common classes for Qase reporters",
+    "homepage": "https://developers.qase.io",
     "type": "library",
     "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "Nikita Fedorov",
+            "email": "nik333r@gmail.com"
+        }
+    ],
+    "keywords": [
+        "qase",
+        "tms",
+        "reporter",
+        "php",
+        "testops"
+    ],
     "autoload": {
         "psr-4": {
             "Qase\\PhpCommons\\": "src/"
@@ -14,13 +29,11 @@
     },
     "require": {
         "php": "^7.4 || ^8.0",
-        "qase/api": "v1.2.1",
+        "qase/api": "v1.2.*",
         "ramsey/uuid": "5.x-dev"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.0 || ^9.0",
         "ext-json": "*"
-    },
-    "minimum-stability": "dev",
-    "prefer-stable": false
+    }
 }
