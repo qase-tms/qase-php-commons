@@ -1,5 +1,5 @@
 {
-  "name": "qase/qase-php-commons",
+  "name": "qase/php-commons",
   "description": "Library with common classes for Qase PHP reporters",
   "homepage": "https://qase.io",
   "license": "Apache-2.0",

@@ -12,7 +12,7 @@ use the corresponding reporter module instead:
 ## Installation
 
 ```bash
-composer require qase/qase-php-commons
+composer require qase/php-commons
 ```
 
 ## Configuration
