@@ -7,12 +7,12 @@ To report results from tests using a popular framework or test runner,
 don't install this module directly and
 use the corresponding reporter module instead:
 
-* [PHPUnit](https://github.com/qase-tms/qase-php/tree/main/packages/qase-phpunit#readme)
+* [PHPUnit](https://github.com/qase-tms/qase-phpunit)
 
 ## Installation
 
 ```bash
-composer require --dev qase/qase-php-commons
+composer require qase/qase-php-commons
 ```
 
 ## Configuration
