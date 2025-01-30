@@ -1,39 +1,58 @@
 {
-    "name": "qase/php-commons",
-    "description": "Library with common classes for Qase reporters",
-    "homepage": "https://developers.qase.io",
-    "type": "library",
-    "license": "Apache-2.0",
-    "authors": [
-        {
-            "name": "Nikita Fedorov",
-            "email": "nik333r@gmail.com"
-        }
-    ],
-    "keywords": [
-        "qase",
-        "tms",
-        "reporter",
-        "php",
-        "testops"
-    ],
-    "autoload": {
-        "psr-4": {
-            "Qase\\PhpCommons\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\": "tests/"
-        }
-    },
-    "require": {
-        "php": "^7.4 || ^8.0",
-        "qase/api": "v1.2.*",
-        "ramsey/uuid": "4.7.*"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^8.0 || ^9.0",
-        "ext-json": "*"
+  "name": "qase/qase-php-commons",
+  "description": "Library with common classes for Qase PHP reporters",
+  "homepage": "https://qase.io",
+  "license": "Apache-2.0",
+  "type": "library",
+  "keywords": [
+    "qase",
+    "tms",
+    "reporter",
+    "common",
+    "php"
+  ],
+  "authors": [
+    {
+      "name": "Qase Team",
+      "email": "support@qase.io"
     }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Qase\\PhpCommons\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": "^8.0",
+    "qase/qase-api-client": "^1.0.0",
+    "qase/qase-api-v2-client": "^1.0.0",
+    "ramsey/uuid": "4.7.*"
+  },
+  "require-dev": {
+    "ext-json": "*",
+    "phpunit/phpunit": "^9"
+  },
+  "scripts": {
+    "test": "phpunit"
+  },
+  "version": "2.0.0",
+  "config": {
+    "platform": {
+      "php": "8.0"
+    },
+    "allow-plugins": {
+      "composer/package-versions-deprecated": true,
+      "dealerdirect/phpcodesniffer-composer-installer": true
+    },
+    "optimize-autoloader": true,
+    "preferred-install": {
+      "*": "dist"
+    },
+    "sort-packages": true
+  }
 }

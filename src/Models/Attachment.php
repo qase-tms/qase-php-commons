@@ -24,4 +24,29 @@ class Attachment extends BaseModel
         $this->content = $content;
         $this->path = $path;
     }
+
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+
+    public function getMime(): string
+    {
+        return $this->mime;
+    }
+
+    public function getSize(): int
+    {
+        return $this->size;
+    }
+
+    public function getContent(): ?string
+    {
+        return $this->content;
+    }
+
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
 }

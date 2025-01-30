@@ -6,7 +6,7 @@ namespace Qase\PhpCommons\Interfaces;
 
 interface LoggerInterface
 {
-    public function write(string $message, string $prefix): void;
-
-    public function writeln(string $message, string $prefix): void;
+    public function info(string $message): void;
+    public function debug(string $message): void;
+    public function error(string $message): void;
 }

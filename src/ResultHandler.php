@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Qase\PhpClientUtils;
 
-use Qase\Client\ApiException;
-use Qase\Client\Model\Response;
-use Qase\Client\Model\ResultCreateBulk;
-use Qase\Client\Model\RunCreate;
+use Qase\APIClientV1\ApiException;
+use Qase\APIClientV1\Model\Response;
+use Qase\APIClientV1\Model\ResultCreateBulk;
+use Qase\APIClientV1\Model\RunCreate;
 
 class ResultHandler
 {

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace Qase\PhpCommons\Config;
+
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 
 abstract class BaseConfig

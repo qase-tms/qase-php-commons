@@ -12,5 +12,7 @@ interface ReporterInterface
 
     public function completeRun(): void;
 
+    public function sendResults(): void;
+
     public function addResult(Result $result): void;
 }
