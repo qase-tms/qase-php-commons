@@ -16,7 +16,7 @@ class ConfigLoader
         $this->config = $this->loadFromJsonFile();
         $this->overrideWithEnvVariables();
 
-        $logger->info("Loaded configuration: " . json_encode($this->config));
+        $logger->debug("Loaded configuration: " . json_encode($this->config));
 
         $this->validate();
     }
