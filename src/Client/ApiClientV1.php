@@ -75,8 +75,8 @@ class ApiClientV1 implements ClientInterface
             $envApi = new EnvironmentsApi($this->client, $this->clientConfig);
             $envs = $envApi->getEnvironments($code, null, $envName, 100);
 
-            foreach ($envs->getResult() as $env) {
-                if ($env->getName() == $envName) {
+            foreach ($envs->getResult()->getEntities() as $env) {
+                if ($env->getSlug() == $envName) {
                     $this->logger->debug('Environment found: ' . $envName);
                     return $env->getId();
                 }
