@@ -103,6 +103,7 @@ class ApiClientV1 implements ClientInterface
 
             $model = new RunCreate();
             $model->setTitle($title);
+            $model->setIsAutotest(true);
 
             if ($description) {
                 $model->setDescription($description);
@@ -175,7 +176,7 @@ class ApiClientV1 implements ClientInterface
 
             $this->logger->debug('Attachment uploaded: ' . $attachment->getTitle());
 
-            return $attachmentId->getResult()->getHash();
+            return $attachmentId->getResult()[0]->getHash();
         } catch (Exception $e) {
             $this->logger->error('Failed to upload attachment: ' . $e->getMessage());
             return null;
