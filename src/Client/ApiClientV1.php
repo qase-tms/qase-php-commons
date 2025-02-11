@@ -16,6 +16,7 @@ use Qase\PhpCommons\Interfaces\ClientInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Attachment;
 use Qase\PhpCommons\Models\Config\TestopsConfig;
+use SplFileObject;
 
 class ApiClientV1 implements ClientInterface
 {
@@ -165,16 +166,27 @@ class ApiClientV1 implements ClientInterface
         }
     }
 
-    // TODO: Implement uploadAttachment() method.
     public function uploadAttachment(string $code, Attachment $attachment): ?string
     {
         try {
-            $this->logger->debug('Upload attachment: ' . $attachment->getTitle());
+            $this->logger->debug('Upload attachment: ' . json_encode($attachment));
 
             $attachApi = new AttachmentsApi($this->client, $this->clientConfig);
-            $attachmentId = $attachApi->uploadAttachment($code, $attachment->getTitle(), $attachment->getMime(), $attachment->getSize(), $attachment->getContent(), $attachment->getPath());
-
-            $this->logger->debug('Attachment uploaded: ' . $attachment->getTitle());
+            if ($attachment->path) {
+                $attachmentId = $attachApi->uploadAttachment($code, new SplFileObject($attachment->path));
+            } elseif ($attachment->content) {
+                $filepath = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $attachment->title;
+                if (file_put_contents($filepath, $attachment->content) === false) {
+                    $this->logger->error('Can not save attachment: ' . $filepath);
+                    return null;
+                }
+                $attachmentId = $attachApi->uploadAttachment($code, new SplFileObject($filepath));
+                if (unlink($filepath) === false) {
+                    $this->logger->error('Can not remove attachment: ' . $filepath);
+                }
+            } else {
+                return null;
+            }
 
             return $attachmentId->getResult()[0]->getHash();
         } catch (Exception $e) {

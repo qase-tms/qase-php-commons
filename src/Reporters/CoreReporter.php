@@ -9,6 +9,9 @@ use Qase\PhpCommons\Interfaces\InternalReporterInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Interfaces\ReporterInterface;
 
+// Disable deprecated errors from Api clients
+error_reporting(E_ALL & ~E_DEPRECATED);
+
 class CoreReporter implements ReporterInterface
 {
     /** @var InternalReporterInterface|null */
