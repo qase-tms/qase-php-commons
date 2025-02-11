@@ -82,7 +82,7 @@ class ApiClientV2 extends ApiClientV1
         $fields = new ResultCreateFields($result->fields);
         $model->setFields($fields);
 
-        $model->setAttachments($result->attachments);
+        $model->setAttachments($this->convertAttachments($result->attachments));
         $model->setParams($result->params);
         $model->setParamGroups($result->groupParams);
         $model->setMessage($result->message);
@@ -111,7 +111,7 @@ class ApiClientV2 extends ApiClientV1
         $executionModel = new ResultStepExecution();
         $executionModel->setStatus($step->execution->getStatus());
         $executionModel->setDuration($step->execution->getDuration());
-        $executionModel->setAttachments($step->attachments);
+        $executionModel->setAttachments($this->convertAttachments($step->attachments));
         $model->setExecution($executionModel);
 
         $steps = [];
@@ -140,5 +140,18 @@ class ApiClientV2 extends ApiClientV1
         $model->setSuite($suite);
 
         return $model;
+    }
+
+    private function convertAttachments(array $attachments): array
+    {
+        $hashes = [];
+        foreach ($attachments as $item) {
+            $result = $this->uploadAttachment($this->config->getProject(), $item);
+            if ($result) {
+                $hashes[] = $result;
+            }
+        }
+
+        return $hashes;
     }
 }

@@ -4,49 +4,29 @@ declare(strict_types=1);
 
 namespace Qase\PhpCommons\Models;
 
-class Attachment extends BaseModel
+
+final class Attachment extends BaseModel
 {
-    protected string $title;
+    public ?string $title;
+    public ?string $mime;
+    public ?string $content;
+    public ?string $path;
 
-    protected string $mime;
-
-    protected int $size;
-
-    protected ?string $content = null;
-
-    protected ?string $path = null;
-
-    public function __construct(string $title, string $mime, int $size, string $content, string $path)
+    private function __construct(?string $title = null, ?string $content = null, ?string $mime = null, ?string $path = null)
     {
         $this->title = $title;
-        $this->mime = $mime;
-        $this->size = $size;
         $this->content = $content;
+        $this->mime = $mime;
         $this->path = $path;
     }
 
-    public function getTitle(): string
+    public static function createFileAttachment(string $path): self
     {
-        return $this->title;
+        return new self(path: $path);
     }
 
-    public function getMime(): string
+    public static function createContentAttachment(string $title, string $content, ?string $mimeType = null): self
     {
-        return $this->mime;
-    }
-
-    public function getSize(): int
-    {
-        return $this->size;
-    }
-
-    public function getContent(): ?string
-    {
-        return $this->content;
-    }
-
-    public function getPath(): ?string
-    {
-        return $this->path;
+        return new self(title: $title, content: $content, mime: $mimeType);
     }
 }
