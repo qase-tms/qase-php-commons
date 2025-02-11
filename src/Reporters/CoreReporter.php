@@ -69,6 +69,8 @@ class CoreReporter implements ReporterInterface
             return;
         }
 
+        $this->logger->debug("Adding result: " . json_encode($result));
+
         try {
             if ($this->rootSuite !== null) {
                 $suites = $result->relations->suite->data;
