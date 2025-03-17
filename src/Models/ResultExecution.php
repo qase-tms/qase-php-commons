@@ -7,8 +7,8 @@ namespace Qase\PhpCommons\Models;
 class ResultExecution
 {
     public ?string $status;
-    public ?int $startTime;
-    public ?int $endTime;
+    public ?float $startTime;
+    public ?float $endTime;
     public ?int $duration;
     public ?string $stackTrace;
     public ?string $thread;
@@ -18,7 +18,7 @@ class ResultExecution
     )
     {
         $this->status = $status;
-        $this->startTime = (int)(microtime(true) * 1000);
+        $this->startTime = microtime(true);
         $this->endTime = null;
         $this->duration = null;
         $this->stackTrace = null;
@@ -35,22 +35,22 @@ class ResultExecution
         return $this->status;
     }
 
-    public function setStartTime(int $startTime): void
+    public function setStartTime(float $startTime): void
     {
         $this->startTime = $startTime;
     }
 
-    public function getStartTime(): ?int
+    public function getStartTime(): ?float
     {
         return $this->startTime;
     }
 
-    public function setEndTime(int $endTime): void
+    public function setEndTime(float $endTime): void
     {
         $this->endTime = $endTime;
     }
 
-    public function getEndTime(): ?int
+    public function getEndTime(): ?float
     {
         return $this->endTime;
     }
@@ -92,7 +92,7 @@ class ResultExecution
 
     public function finish(): void
     {
-        $this->endTime = (int)(microtime(true) * 1000);
-        $this->duration = $this->endTime - $this->startTime;
+        $this->endTime = microtime(true);
+        $this->duration = (int)($this->endTime - $this->startTime);
     }
 }
