@@ -74,6 +74,8 @@ class ApiClientV2 extends ApiClientV1
 
         $execution = new ResultExecution();
         $execution->setStatus($result->execution->getStatus());
+        $execution->setStartTime($result->execution->getStartTime());
+        $execution->setEndTime($result->execution->getEndTime());
         $execution->setDuration($result->execution->getDuration());
         $execution->setStacktrace($result->execution->getStackTrace());
         $execution->setThread($result->execution->getThread());

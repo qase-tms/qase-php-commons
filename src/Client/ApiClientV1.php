@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Qase\PhpCommons\Client;
 
+use DateTime;
+use DateTimeZone;
 use Exception;
 use GuzzleHttp\Client;
 use Qase\APIClientV1\Api\AttachmentsApi;
@@ -105,6 +107,7 @@ class ApiClientV1 implements ClientInterface
             $model = new RunCreate();
             $model->setTitle($title);
             $model->setIsAutotest(true);
+            $model->setStartTime((new DateTime('now', new DateTimeZone('UTC')))->format('Y-m-d H:i:s'));
 
             if ($description) {
                 $model->setDescription($description);

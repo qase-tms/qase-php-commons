@@ -6,16 +6,16 @@ namespace Qase\PhpCommons\Models;
 
 class StepExecution
 {
-    protected ?int $startTime;
-    protected ?int $endTime;
-    protected ?int $duration;
+    protected ?float $startTime = null;
+    protected ?float $endTime = null;
+    protected ?int $duration = null;
     protected string $status;
 
     public function __construct(
-        ?string $status = null
+        string $status = 'untested'
     )
     {
-        $this->startTime = (int)(microtime(true) * 1000);
+        $this->startTime = microtime(true);
         $this->setStatus($status);
     }
 
@@ -37,22 +37,22 @@ class StepExecution
         return $this->status;
     }
 
-    public function setStartTime(int $startTime): void
+    public function setStartTime(float $startTime): void
     {
         $this->startTime = $startTime;
     }
 
-    public function getStartTime(): ?int
+    public function getStartTime(): ?float
     {
         return $this->startTime;
     }
 
-    public function setEndTime(int $endTime): void
+    public function setEndTime(float $endTime): void
     {
         $this->endTime = $endTime;
     }
 
-    public function getEndTime(): ?int
+    public function getEndTime(): ?float
     {
         return $this->endTime;
     }
@@ -69,7 +69,7 @@ class StepExecution
 
     public function finish(): void
     {
-        $this->endTime = (int)(microtime(true) * 1000);
-        $this->duration = $this->endTime - $this->startTime;
+        $this->endTime = microtime(true);
+        $this->duration = (int)($this->endTime - $this->startTime);
     }
 }
