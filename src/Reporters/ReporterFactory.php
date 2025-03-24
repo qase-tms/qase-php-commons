@@ -12,15 +12,19 @@ use Qase\PhpCommons\Interfaces\ReporterInterface;
 use Qase\PhpCommons\Interfaces\StateInterface;
 use Qase\PhpCommons\Loggers\Logger;
 use Qase\PhpCommons\Models\Config\QaseConfig;
+use Qase\PhpCommons\Utils\HostInfo;
 use Qase\PhpCommons\Utils\StateManager;
 
 class ReporterFactory
 {
-    public static function create(): ReporterInterface
+    public static function create(String $framework = "", String $reporterName = ""): ReporterInterface
     {
-        $configLoader = new ConfigLoader(new Logger());
+        $configLoader = new ConfigLoader(new Logger(true));
         $config = $configLoader->getConfig();
         $logger = new Logger($config->getDebug());
+        $hostInfo = new HostInfo();
+        $hostData = $hostInfo->getHostInfo($framework, $reporterName);
+        $logger->debug("Host data: " . json_encode($hostData));
         $state = new StateManager();
         $reporter = self::createInternalReporter($logger, $config, $state);
         $fallbackReporter = self::createInternalReporter($logger, $config, $state, true);
