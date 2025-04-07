@@ -70,7 +70,7 @@ class ApiClientV2 extends ApiClientV1
         $model->setTitle($result->title);
         $model->setId($result->id);
         $model->setSignature($result->signature);
-        $model->setTestOpsId($result->testOpsId);
+        $model->setTestOpsIds($result->testOpsIds);
 
         $execution = new ResultExecution();
         $execution->setStatus($result->execution->getStatus());

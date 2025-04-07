@@ -11,7 +11,7 @@ class Result extends BaseModel
     public string $id;
     public string $title = '';
     public ?string $signature = null;
-    public ?int $testOpsId = null;
+    public ?array $testOpsIds = null;
     public ResultExecution $execution;
     public array $fields = [];
     public array $attachments = [];
