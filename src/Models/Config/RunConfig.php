@@ -8,6 +8,7 @@ class RunConfig
     public ?string $description = null;
     public bool $complete = true;
     public ?int $id = null;
+    public ?array $tags = null;
 
     public function __construct()
     {
@@ -52,5 +53,15 @@ class RunConfig
     public function setId(?int $id): void
     {
         $this->id = $id;
+    }
+
+    public function getTags(): ?array
+    {
+        return $this->tags;
+    }
+
+    public function setTags(?array $tags): void
+    {
+        $this->tags = $tags;
     }
 }

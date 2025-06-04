@@ -97,7 +97,7 @@ class ApiClientV1 implements ClientInterface
     /**
      * @throws Exception
      */
-    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null): int
+    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null, ?array $tags = null): int
     {
         try {
             $this->logger->debug('Create test run: ' . $title);
@@ -119,6 +119,10 @@ class ApiClientV1 implements ClientInterface
 
             if ($envId) {
                 $model->setEnvironmentId($envId);
+            }
+
+            if ($tags) {
+                $model->setTags($tags);
             }
 
             $run = $runApi->createRun($code, $model);
