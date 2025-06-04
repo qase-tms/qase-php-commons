@@ -13,7 +13,7 @@ interface ClientInterface
 
     public function getEnvironment(string $code, string $envName): ?int;
 
-    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null): int;
+    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null, ?array $tags = null): int;
 
     public function completeTestRun(string $code, int $runId): void;
 

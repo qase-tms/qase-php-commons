@@ -54,7 +54,8 @@ class TestOpsReporter implements InternalReporterInterface
         $this->state->completeRun(
             function () {
                 $this->client->completeTestRun($this->config->testops->getProject(), $this->runId);
-            });
+            }
+        );
     }
 
     public function addResult($result): void
@@ -90,7 +91,8 @@ class TestOpsReporter implements InternalReporterInterface
             $this->config->testops->run->getTitle(),
             $this->config->testops->run->getDescription(),
             $this->config->testops->plan->getId(),
-            $envId
+            $envId,
+            $this->config->testops->run->getTags()
         );
     }
 

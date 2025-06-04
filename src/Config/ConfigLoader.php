@@ -69,6 +69,7 @@ class ConfigLoader
         if (isset($data['testops']['run']['title'])) $config->testops->run->setTitle($data['testops']['run']['title']);
         if (isset($data['testops']['run']['description'])) $config->testops->run->setDescription($data['testops']['run']['description']);
         if (isset($data['testops']['run']['complete'])) $config->testops->run->setComplete($data['testops']['run']['complete']);
+        if (isset($data['testops']['run']['tags'])) $config->testops->run->setTags($data['testops']['run']['tags']);
 
         if (isset($data['testops']['plan']['id'])) $config->testops->plan->setId($data['testops']['plan']['id']);
 
@@ -125,6 +126,9 @@ class ConfigLoader
                     break;
                 case "qase_testops_run_complete":
                     $this->config->testops->run->setComplete($value);
+                    break;
+                case "qase_testops_run_tags":
+                    $this->config->testops->run->setTags(array_map('trim', explode(',', $value)));
                     break;
                 case "qase_testops_plan_id":
                     $this->config->testops->plan->setId($value);
