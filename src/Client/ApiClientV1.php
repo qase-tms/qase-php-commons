@@ -9,14 +9,19 @@ use DateTimeZone;
 use Exception;
 use GuzzleHttp\Client;
 use Qase\APIClientV1\Api\AttachmentsApi;
+use Qase\APIClientV1\Api\ConfigurationsApi;
 use Qase\APIClientV1\Api\EnvironmentsApi;
 use Qase\APIClientV1\Api\ProjectsApi;
 use Qase\APIClientV1\Api\RunsApi;
 use Qase\APIClientV1\Configuration;
+use Qase\APIClientV1\Model\ConfigurationCreate;
+use Qase\APIClientV1\Model\ConfigurationGroupCreate;
 use Qase\APIClientV1\Model\RunCreate;
 use Qase\PhpCommons\Interfaces\ClientInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Attachment;
+use Qase\PhpCommons\Models\ConfigurationGroup;
+use Qase\PhpCommons\Models\ConfigurationItem;
 use Qase\PhpCommons\Models\Config\TestopsConfig;
 use SplFileObject;
 
@@ -97,7 +102,7 @@ class ApiClientV1 implements ClientInterface
     /**
      * @throws Exception
      */
-    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null, ?array $tags = null): int
+    public function createTestRun(string $code, string $title, ?string $description = null, ?int $planId = null, ?int $envId = null, ?array $tags = null, ?array $configurations = null): int
     {
         try {
             $this->logger->debug('Create test run: ' . $title);
@@ -123,6 +128,10 @@ class ApiClientV1 implements ClientInterface
 
             if ($tags) {
                 $model->setTags($tags);
+            }
+
+            if ($configurations) {
+                $model->setConfigurations($configurations);
             }
 
             $run = $runApi->createRun($code, $model);
@@ -205,5 +214,94 @@ class ApiClientV1 implements ClientInterface
     public function sendResults(string $code, int $runId, array $results): void
     {
         // Use Api V2 client for sending results
+    }
+
+    public function getConfigurationGroups(string $code): array
+    {
+        try {
+            $this->logger->debug('Get configuration groups for project: ' . $code);
+
+            $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
+            $groups = $configApi->getConfigurations($code);
+
+            $result = [];
+            if ($groups && $groups->getResult() && $groups->getResult()->getEntities()) {
+                foreach ($groups->getResult()->getEntities() as $group) {
+                    $configGroup = new ConfigurationGroup(
+                        $group->getId(),
+                        $group->getTitle()
+                    );
+                    
+                    // Store items for this group if they exist
+                    if ($group->getConfigurations()) {
+                        foreach ($group->getConfigurations() as $item) {
+                            $configGroup->items[] = new ConfigurationItem(
+                                $item->getId(),
+                                $item->getTitle()
+                            );
+                        }
+                    }
+                    
+                    $result[] = $configGroup;
+                }
+            }
+
+            $this->logger->debug('Found ' . count($result) . ' configuration groups');
+            return $result;
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get configuration groups: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function createConfigurationGroup(string $code, string $title): ?ConfigurationGroup
+    {
+        try {
+            $this->logger->debug('Create configuration group: ' . $title);
+
+            $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
+
+            $model = new ConfigurationGroupCreate();
+            $model->setTitle($title);
+
+            $group = $configApi->createConfigurationGroup($code, $model);
+            $result = new ConfigurationGroup(
+                $group->getResult()->getId(),
+                $title
+            );
+
+            $this->logger->debug('Configuration group created with id: ' . $result->getId());
+            return $result;
+        } catch (Exception $e) {
+            $this->logger->error('Failed to create configuration group: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+
+
+    public function createConfigurationItem(string $code, int $groupId, string $title): ?ConfigurationItem
+    {
+        try {
+            $this->logger->debug('Create configuration item: ' . $title . ' in group: ' . $groupId);
+
+            $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
+
+            $model = new ConfigurationCreate();
+            $model->setTitle($title);
+            $model->setGroupId($groupId);
+
+            $item = $configApi->createConfiguration($code, $model);
+            $result = new ConfigurationItem(
+                $item->getResult()->getId(),
+                $title
+            );
+
+            $this->logger->debug('Configuration item created with id: ' . $result->getId());
+            return $result;
+        } catch (Exception $e) {
+            $this->logger->error('Failed to create configuration item: ' . $e->getMessage());
+            return null;
+        }
     }
 }

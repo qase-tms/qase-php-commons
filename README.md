@@ -49,6 +49,8 @@ All configuration options are listed in the table below:
 | Qase test plan ID                                                                                                          | `testops.plan.id`          | `QASE_TESTOPS_PLAN_ID`          | undefined                               | No       | Any integer                |
 | Size of batch for sending test results                                                                                     | `testops.batch.size`       | `QASE_TESTOPS_BATCH_SIZE`       | `200`                                   | No       | Any integer                |
 | Enable defects for failed test cases                                                                                       | `testops.defect`           | `QASE_TESTOPS_DEFECT`           | `False`                                 | No       | `True`, `False`            |
+| Configuration values to associate with test run                                                                            | `testops.configurations.values` | `QASE_TESTOPS_CONFIGURATIONS_VALUES` | `[]`                                   | No       | Comma-separated key=value pairs |
+| Create configuration groups and values if they don't exist                                                                | `testops.configurations.createIfNotExists` | `QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS` | `False`                                 | No       | `True`, `False`            |
 
 ### Example `qase.config.json` config:
 
@@ -83,7 +85,45 @@ All configuration options are listed in the table below:
     "project": "<project_code>",
     "batch": {
       "size": 100
+    },
+    "configurations": {
+      "values": [
+        {
+          "name": "browser",
+          "value": "chrome"
+        },
+        {
+          "name": "version",
+          "value": "latest"
+        },
+        {
+          "name": "environment",
+          "value": "staging"
+        }
+      ],
+      "createIfNotExists": true
     }
   }
 }
 ```
+
+### Environment Variables Example:
+
+You can also configure configurations using environment variables:
+
+```bash
+export QASE_TESTOPS_CONFIGURATIONS_VALUES="browser=chrome,version=latest,environment=staging"
+export QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true
+```
+
+The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key=value pairs.
+
+### How Configurations Work
+
+Configurations in Qase TestOps work as follows:
+- **name** field represents the configuration group (e.g., "browser", "environment")
+- **value** field represents the configuration item within that group (e.g., "chrome", "staging")
+- When `createIfNotExists` is true, the system will:
+  1. Create a configuration group with the specified name if it doesn't exist
+  2. Create a configuration item with the specified value in that group
+  3. Associate the configuration item ID with the test run

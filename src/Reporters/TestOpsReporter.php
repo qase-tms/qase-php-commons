@@ -17,6 +17,7 @@ class TestOpsReporter implements InternalReporterInterface
     private QaseConfig $config;
     private StateInterface $state;
     private ?int $runId = null;
+    private ?array $cachedConfigurationGroups = null;
 
     public function __construct(ClientInterface $client, QaseConfig $config, StateInterface $state)
     {
@@ -85,6 +86,7 @@ class TestOpsReporter implements InternalReporterInterface
     private function createNewRun(): int
     {
         $envId = $this->getEnvironmentId($this->config->getEnvironment());
+        $configurations = $this->prepareConfigurations();
 
         return $this->client->createTestRun(
             $this->config->testops->getProject(),
@@ -92,8 +94,111 @@ class TestOpsReporter implements InternalReporterInterface
             $this->config->testops->run->getDescription(),
             $this->config->testops->plan->getId(),
             $envId,
-            $this->config->testops->run->getTags()
+            $this->config->testops->run->getTags(),
+            $configurations
         );
+    }
+
+    private function prepareConfigurations(): ?array
+    {
+        $configValues = $this->config->testops->configurations->getValues();
+        if (empty($configValues)) {
+            return null;
+        }
+
+        $configurations = [];
+        foreach ($configValues as $configItem) {
+            if (!isset($configItem['name']) || !isset($configItem['value'])) {
+                continue;
+            }
+            
+            // Try to find existing configuration group or create new one
+            $groupId = $this->findOrCreateConfigurationGroup($configItem['name']);
+            if ($groupId) {
+                $itemId = $this->findOrCreateConfigurationItem($groupId, $configItem['value']);
+                if ($itemId) {
+                    $configurations[] = $itemId;
+                }
+            }
+        }
+
+        return empty($configurations) ? null : $configurations;
+    }
+
+    private function findOrCreateConfigurationGroup(string $title): ?int
+    {
+        // Get cached groups or fetch from API
+        if ($this->cachedConfigurationGroups === null) {
+            $this->cachedConfigurationGroups = $this->client->getConfigurationGroups($this->config->testops->getProject());
+        }
+        
+        // Try to find existing group
+        foreach ($this->cachedConfigurationGroups as $group) {
+            if ($group->getTitle() === $title) {
+                return $group->getId();
+            }
+        }
+
+        // Create new group if createIfNotExists is enabled
+        if ($this->config->testops->configurations->isCreateIfNotExists()) {
+            $newGroup = $this->client->createConfigurationGroup(
+                $this->config->testops->getProject(),
+                $title
+            );
+            return $newGroup ? $newGroup->getId() : null;
+        }
+
+        // If group not found and createIfNotExists is false, return null
+        return null;
+    }
+
+    private function findOrCreateConfigurationItem(int $groupId, string $title): ?int
+    {
+        // First try to find existing item in the group
+        $existingItemId = $this->findExistingConfigurationItem($groupId, $title);
+        if ($existingItemId) {
+            return $existingItemId;
+        }
+
+        // Create new item only if createIfNotExists is enabled
+        if ($this->config->testops->configurations->isCreateIfNotExists()) {
+            $newItem = $this->client->createConfigurationItem(
+                $this->config->testops->getProject(),
+                $groupId,
+                $title
+            );
+            return $newItem ? $newItem->getId() : null;
+        }
+
+        return null;
+    }
+
+    private function findExistingConfigurationItem(int $groupId, string $title): ?int
+    {
+        // Use cached groups
+        if ($this->cachedConfigurationGroups === null) {
+            $this->cachedConfigurationGroups = $this->client->getConfigurationGroups($this->config->testops->getProject());
+        }
+        
+        // Find the specific group
+        foreach ($this->cachedConfigurationGroups as $group) {
+            if ($group->getId() === $groupId) {
+                // Look for existing item with the same title
+                foreach ($group->items as $item) {
+                    if ($item->getTitle() === $title) {
+                        return $item->getId();
+                    }
+                }
+                break;
+            }
+        }
+        
+        return null;
+    }
+
+    private function resetConfigurationCache(): void
+    {
+        $this->cachedConfigurationGroups = null;
     }
 
     private function getEnvironmentId(?string $name): ?int

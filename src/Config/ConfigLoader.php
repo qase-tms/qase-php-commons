@@ -75,6 +75,13 @@ class ConfigLoader
 
         if (isset($data['testops']['batch']['size'])) $config->testops->batch->setSize($data['testops']['batch']['size']);
 
+        if (isset($data['testops']['configurations']['values'])) {
+            $config->testops->configurations->setValues($data['testops']['configurations']['values']);
+        }
+        if (isset($data['testops']['configurations']['createIfNotExists'])) {
+            $config->testops->configurations->setCreateIfNotExists($data['testops']['configurations']['createIfNotExists']);
+        }
+
         if (isset($data['report']['driver'])) $config->report->setDriver($data['report']['driver']);
 
         if (isset($data['report']['connection']['path'])) $config->report->connection->setPath($data['report']['connection']['path']);
@@ -136,6 +143,12 @@ class ConfigLoader
                 case "qase_testops_batch_size":
                     $this->config->testops->batch->setSize($value);
                     break;
+                case "qase_testops_configurations_values":
+                    $this->parseConfigurationValues($value);
+                    break;
+                case "qase_testops_configurations_create_if_not_exists":
+                    $this->config->testops->configurations->setCreateIfNotExists($value);
+                    break;
                 case "qase_report_driver":
                     $this->config->report->setDriver($value);
                     break;
@@ -147,5 +160,35 @@ class ConfigLoader
                     break;
             }
         }
+    }
+
+    /**
+     * Parse configuration values from comma-separated key=value pairs
+     * 
+     * @param string $value Comma-separated key=value pairs
+     */
+    private function parseConfigurationValues(string $value): void
+    {
+        $pairs = array_map('trim', explode(',', $value));
+        $configurations = [];
+
+        foreach ($pairs as $pair) {
+            if (strpos($pair, '=') === false) {
+                continue;
+            }
+
+            list($name, $configValue) = explode('=', $pair, 2);
+            $name = trim($name);
+            $configValue = trim($configValue);
+
+            if (!empty($name) && !empty($configValue)) {
+                $configurations[] = [
+                    'name' => $name,
+                    'value' => $configValue
+                ];
+            }
+        }
+
+        $this->config->testops->configurations->setValues($configurations);
     }
 }

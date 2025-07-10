@@ -11,6 +11,7 @@ class TestopsConfig
     public RunConfig $run;
     public PlanConfig $plan;
     public Batch $batch;
+    public ConfigurationConfig $configurations;
 
     public function __construct()
     {
@@ -18,6 +19,7 @@ class TestopsConfig
         $this->run = new RunConfig();
         $this->plan = new PlanConfig();
         $this->batch = new Batch();
+        $this->configurations = new ConfigurationConfig();
     }
 
     public function getProject(): ?string
