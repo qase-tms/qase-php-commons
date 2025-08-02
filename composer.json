@@ -31,11 +31,11 @@
     "php": "^8.0",
     "qase/qase-api-client": "^1.1.0",
     "qase/qase-api-v2-client": "^1.1.0",
-    "ramsey/uuid": "4.7.*"
+    "ramsey/uuid": "^4.7"
   },
   "require-dev": {
     "ext-json": "*",
-    "phpunit/phpunit": "^9"
+    "phpunit/phpunit": "^9 || ^10 || ^11"
   },
   "scripts": {
     "test": "phpunit"
