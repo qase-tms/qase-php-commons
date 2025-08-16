@@ -17,39 +17,58 @@ use Qase\PhpCommons\Utils\StateManager;
 
 class ReporterFactory
 {
-    public static function create(String $framework = "", String $reporterName = ""): ReporterInterface
+    public function __construct(
+        protected readonly QaseConfig $config,
+        protected readonly HostInfo $hostInfo = new HostInfo(),
+        protected readonly StateInterface $state = new StateManager(),
+        protected LoggerInterface $logger = new Logger(),
+    )
+    {
+    }
+
+    public function createReporter(string $framework = '', string $reporterName = ''): ReporterInterface
+    {
+        // Set the logger based on the debug mode from the config
+        // This is to have exactly the same behavior as before
+        if ($this->config->getDebug()){
+            $this->logger = new Logger(true);
+        }
+
+        $hostData = $this->hostInfo->getHostInfo($framework, $reporterName);
+        $this->logger->debug('Host data: ' . json_encode($hostData));
+        $reporter = $this->createInternalReporter();
+        $fallbackReporter = $this->createInternalReporter(true);
+
+        return new CoreReporter($this->logger, $reporter, $fallbackReporter, $this->config->getRootSuite());
+    }
+
+    public static function create(string $framework = '', string $reporterName = ''): ReporterInterface
     {
         $configLoader = new ConfigLoader(new Logger(true));
         $config = $configLoader->getConfig();
-        $logger = new Logger($config->getDebug());
-        $hostInfo = new HostInfo();
-        $hostData = $hostInfo->getHostInfo($framework, $reporterName);
-        $logger->debug("Host data: " . json_encode($hostData));
-        $state = new StateManager();
-        $reporter = self::createInternalReporter($logger, $config, $state);
-        $fallbackReporter = self::createInternalReporter($logger, $config, $state, true);
+        $factory = new self($config);
 
-        return new CoreReporter($logger, $reporter, $fallbackReporter, $config->getRootSuite());
+        return $factory->createReporter($framework, $reporterName);
     }
 
-    private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, bool $fallback = false): ?InternalReporterInterface
+    protected function createInternalReporter(bool $fallback = false): ?InternalReporterInterface
     {
-        $mode = $fallback ? $config->getFallback() : $config->getMode();
+        $mode = $fallback ? $this->config->getFallback() : $this->config->getMode();
 
         if ($mode === 'testops') {
-            return self::prepareTestopsReporter($logger, $config, $state);
+            return $this->prepareTestopsReporter();
         }
 
         if ($mode === 'report') {
-            return new FileReporter($logger, $config->report, $state);
+            return new FileReporter($this->logger, $this->config->report, $this->state);
         }
 
         return null;
     }
 
-    private static function prepareTestopsReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state): InternalReporterInterface
+    protected function prepareTestopsReporter(): InternalReporterInterface
     {
-        $client = new ApiClientV2($logger, $config->testops);
-        return new TestOpsReporter($client, $config, $state);
+        $client = new ApiClientV2($this->logger, $this->config->testops);
+        return new TestOpsReporter($client, $this->config, $this->state);
     }
 }
