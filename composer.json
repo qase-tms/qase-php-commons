@@ -28,7 +28,7 @@
     }
   },
   "require": {
-    "php": "^8.0",
+    "php": "^8.1",
     "qase/qase-api-client": "^1.1.0",
     "qase/qase-api-v2-client": "^1.1.0",
     "ramsey/uuid": "4.7.*"
@@ -43,7 +43,7 @@
   "version": "2.1.2",
   "config": {
     "platform": {
-      "php": "8.0"
+      "php": "8.1"
     },
     "allow-plugins": {
       "composer/package-versions-deprecated": true,
