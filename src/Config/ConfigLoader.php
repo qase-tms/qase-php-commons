@@ -82,6 +82,10 @@ class ConfigLoader
             $config->testops->configurations->setCreateIfNotExists($data['testops']['configurations']['createIfNotExists']);
         }
 
+        if (isset($data['testops']['statusFilter'])) {
+            $config->testops->setStatusFilter($data['testops']['statusFilter']);
+        }
+
         if (isset($data['report']['driver'])) $config->report->setDriver($data['report']['driver']);
 
         if (isset($data['report']['connection']['path'])) $config->report->connection->setPath($data['report']['connection']['path']);
@@ -149,6 +153,9 @@ class ConfigLoader
                 case "qase_testops_configurations_create_if_not_exists":
                     $this->config->testops->configurations->setCreateIfNotExists($value);
                     break;
+                case "qase_testops_status_filter":
+                    $this->parseStatusFilter($value);
+                    break;
                 case "qase_report_driver":
                     $this->config->report->setDriver($value);
                     break;
@@ -190,5 +197,21 @@ class ConfigLoader
         }
 
         $this->config->testops->configurations->setValues($configurations);
+    }
+
+    /**
+     * Parse status filter from comma-separated string
+     * 
+     * @param string $value Comma-separated status values
+     */
+    private function parseStatusFilter(string $value): void
+    {
+        if (empty(trim($value))) {
+            $this->config->testops->setStatusFilter([]);
+            return;
+        }
+        
+        $statuses = array_map('trim', explode(',', $value));
+        $this->config->testops->setStatusFilter($statuses);
     }
 }

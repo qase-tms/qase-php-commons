@@ -51,6 +51,7 @@ All configuration options are listed in the table below:
 | Enable defects for failed test cases                                                                                       | `testops.defect`           | `QASE_TESTOPS_DEFECT`           | `False`                                 | No       | `True`, `False`            |
 | Configuration values to associate with test run                                                                            | `testops.configurations.values` | `QASE_TESTOPS_CONFIGURATIONS_VALUES` | `[]`                                   | No       | Comma-separated key=value pairs |
 | Create configuration groups and values if they don't exist                                                                | `testops.configurations.createIfNotExists` | `QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS` | `False`                                 | No       | `True`, `False`            |
+| Status filter for test results                                                                                             | `testops.statusFilter`     | `QASE_TESTOPS_STATUS_FILTER`     | `[]`                                  | No       | Comma-separated string       |
 
 ### Example `qase.config.json` config:
 
@@ -102,7 +103,8 @@ All configuration options are listed in the table below:
         }
       ],
       "createIfNotExists": true
-    }
+    },
+    "statusFilter": ["skipped", "blocked", "untested"]
   }
 }
 ```
@@ -114,6 +116,7 @@ You can also configure configurations using environment variables:
 ```bash
 export QASE_TESTOPS_CONFIGURATIONS_VALUES="browser=chrome,version=latest,environment=staging"
 export QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true
+export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
 ```
 
 The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key=value pairs.
@@ -127,3 +130,30 @@ Configurations in Qase TestOps work as follows:
   1. Create a configuration group with the specified name if it doesn't exist
   2. Create a configuration item with the specified value in that group
   3. Associate the configuration item ID with the test run
+
+### Status Filtering
+
+You can filter out test results with specific statuses using the `statusFilter` configuration option:
+
+**Config file example:**
+```json
+{
+  "testops": {
+    "statusFilter": ["skipped", "blocked", "untested"]
+  }
+}
+```
+
+**Environment variable example:**
+```bash
+export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
+```
+
+**Available statuses:**
+- `passed` - Test passed successfully
+- `failed` - Test failed
+- `skipped` - Test was skipped
+- `blocked` - Test was blocked
+- `untested` - Test was not tested
+
+When `statusFilter` is configured, results with the specified statuses will be excluded from being sent to Qase TestOps.
