@@ -104,4 +104,55 @@ class ConfigLoaderTest extends TestCase
         // Clean up
         putenv('QASE_TESTOPS_CONFIGURATIONS_VALUES');
     }
+
+    public function testStatusFilterFromEnv(): void
+    {
+        // Set environment variable for status filter
+        putenv('QASE_TESTOPS_STATUS_FILTER=skipped,blocked,untested');
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $statusFilter = $config->testops->getStatusFilter();
+        $this->assertCount(3, $statusFilter);
+        $this->assertContains('skipped', $statusFilter);
+        $this->assertContains('blocked', $statusFilter);
+        $this->assertContains('untested', $statusFilter);
+
+        // Clean up
+        putenv('QASE_TESTOPS_STATUS_FILTER');
+    }
+
+    public function testStatusFilterFromEnvWithSpaces(): void
+    {
+        // Set environment variable with spaces
+        putenv('QASE_TESTOPS_STATUS_FILTER=skipped, blocked , untested');
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $statusFilter = $config->testops->getStatusFilter();
+        $this->assertCount(3, $statusFilter);
+        $this->assertContains('skipped', $statusFilter);
+        $this->assertContains('blocked', $statusFilter);
+        $this->assertContains('untested', $statusFilter);
+
+        // Clean up
+        putenv('QASE_TESTOPS_STATUS_FILTER');
+    }
+
+    public function testStatusFilterFromEnvEmpty(): void
+    {
+        // Set empty environment variable
+        putenv('QASE_TESTOPS_STATUS_FILTER=');
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $statusFilter = $config->testops->getStatusFilter();
+        $this->assertEmpty($statusFilter);
+
+        // Clean up
+        putenv('QASE_TESTOPS_STATUS_FILTER');
+    }
 } 

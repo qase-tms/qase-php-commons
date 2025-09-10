@@ -61,6 +61,11 @@ class TestOpsReporter implements InternalReporterInterface
 
     public function addResult($result): void
     {
+        // Apply status filter if configured
+        if (!$this->shouldIncludeResult($result)) {
+            return;
+        }
+
         $this->results[] = $result;
 
         if (count($this->results) >= $this->config->testops->batch->getSize()) {
@@ -222,5 +227,37 @@ class TestOpsReporter implements InternalReporterInterface
     private function sendResultsByBatch(array $results): void
     {
         $this->client->sendResults($this->config->testops->getProject(), $this->runId, $results);
+    }
+
+    /**
+     * Check if result should be included based on status filter
+     * 
+     * @param mixed $result The result object to check
+     * @return bool True if result should be included, false otherwise
+     */
+    private function shouldIncludeResult($result): bool
+    {
+        $statusFilter = $this->config->testops->getStatusFilter();
+        
+        // If no filter is configured, include all results
+        if (empty($statusFilter)) {
+            return true;
+        }
+
+        // Get result status
+        $status = null;
+        if (isset($result->execution) && isset($result->execution->status)) {
+            $status = $result->execution->status;
+        } elseif (isset($result->status)) {
+            $status = $result->status;
+        }
+
+        // If status is not found, include the result
+        if ($status === null) {
+            return true;
+        }
+
+        // Exclude result if its status is in the filter list
+        return !in_array($status, $statusFilter, true);
     }
 }

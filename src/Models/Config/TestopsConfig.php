@@ -12,6 +12,7 @@ class TestopsConfig
     public PlanConfig $plan;
     public Batch $batch;
     public ConfigurationConfig $configurations;
+    public array $statusFilter = [];
 
     public function __construct()
     {
@@ -40,5 +41,15 @@ class TestopsConfig
     public function setDefect(bool $defect): void
     {
         $this->defect = $defect;
+    }
+
+    public function getStatusFilter(): array
+    {
+        return $this->statusFilter;
+    }
+
+    public function setStatusFilter(array $statusFilter): void
+    {
+        $this->statusFilter = $statusFilter;
     }
 }

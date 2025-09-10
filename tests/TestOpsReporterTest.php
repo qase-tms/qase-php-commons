@@ -160,6 +160,87 @@ class TestOpsReporterTest extends TestCase
         $reporter->completeRun();
     }
 
+    public function testAddResultFiltersOutExcludedStatuses(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+        
+        // Configure status filter to exclude 'skipped' and 'blocked'
+        $this->config->testops->setStatusFilter(['skipped', 'blocked']);
+
+        $this->clientMock->expects($this->once())
+            ->method('sendResults')
+            ->with('TEST_PROJECT', 123, [
+                $this->createResultWithStatus('passed'),
+                $this->createResultWithStatus('failed')
+            ]);
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter->startRun();
+
+        // Add results with different statuses
+        $reporter->addResult($this->createResultWithStatus('passed'));
+        $reporter->addResult($this->createResultWithStatus('skipped')); // Should be filtered out
+        $reporter->addResult($this->createResultWithStatus('blocked')); // Should be filtered out
+        $reporter->addResult($this->createResultWithStatus('failed'));
+
+        $reporter->sendResults();
+    }
+
+    public function testAddResultIncludesAllResultsWhenNoFilterConfigured(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+        
+        // No status filter configured
+        $this->config->testops->setStatusFilter([]);
+
+        $this->clientMock->expects($this->exactly(2))
+            ->method('sendResults')
+            ->withConsecutive(
+                ['TEST_PROJECT', 123, [
+                    $this->createResultWithStatus('passed'),
+                    $this->createResultWithStatus('skipped')
+                ]],
+                ['TEST_PROJECT', 123, [
+                    $this->createResultWithStatus('blocked'),
+                    $this->createResultWithStatus('failed')
+                ]]
+            );
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter->startRun();
+
+        // Add results with different statuses - all should be included
+        $reporter->addResult($this->createResultWithStatus('passed'));
+        $reporter->addResult($this->createResultWithStatus('skipped'));
+        $reporter->addResult($this->createResultWithStatus('blocked'));
+        $reporter->addResult($this->createResultWithStatus('failed'));
+    }
+
+    public function testAddResultHandlesResultsWithoutStatus(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+        
+        // Configure status filter
+        $this->config->testops->setStatusFilter(['skipped']);
+
+        $this->clientMock->expects($this->once())
+            ->method('sendResults')
+            ->with('TEST_PROJECT', 123, [
+                $this->createResultWithoutStatus(),
+                $this->createResultWithStatus('passed')
+            ]);
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter->startRun();
+
+        // Add results - one without status should be included
+        $reporter->addResult($this->createResultWithoutStatus());
+        $reporter->addResult($this->createResultWithStatus('skipped')); // Should be filtered out
+        $reporter->addResult($this->createResultWithStatus('passed'));
+
+        $reporter->sendResults();
+    }
+
     private function getPrivateProperty(object $object, string $propertyName)
     {
         $reflection = new ReflectionClass($object);
@@ -180,5 +261,21 @@ class TestOpsReporterTest extends TestCase
         $config->testops->batch->setSize(2);
 
         return $config;
+    }
+
+    private function createResultWithStatus(string $status): object
+    {
+        $result = new \stdClass();
+        $result->execution = new \stdClass();
+        $result->execution->status = $status;
+        return $result;
+    }
+
+    private function createResultWithoutStatus(): object
+    {
+        $result = new \stdClass();
+        $result->execution = new \stdClass();
+        // No status set
+        return $result;
     }
 }
