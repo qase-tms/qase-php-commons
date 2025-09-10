@@ -51,4 +51,14 @@ interface ClientInterface
      * @return ConfigurationItem|null
      */
     public function createConfigurationItem(string $code, int $groupId, string $title): ?ConfigurationItem;
+
+    /**
+     * Update external issue for a test run
+     * 
+     * @param string $code Project code
+     * @param string $type External issue type
+     * @param array $links Array of links with run_id and external_issue
+     * @return void
+     */
+    public function runUpdateExternalIssue(string $code, string $type, array $links): void;
 }

@@ -10,6 +10,7 @@ class ConfigLoader
 {
     private QaseConfig $config;
     private string $filePath = '/qase.config.json';
+    private ?string $tempExternalLinkType = null;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -70,6 +71,15 @@ class ConfigLoader
         if (isset($data['testops']['run']['description'])) $config->testops->run->setDescription($data['testops']['run']['description']);
         if (isset($data['testops']['run']['complete'])) $config->testops->run->setComplete($data['testops']['run']['complete']);
         if (isset($data['testops']['run']['tags'])) $config->testops->run->setTags($data['testops']['run']['tags']);
+        if (isset($data['testops']['run']['externalLink'])) {
+            $externalLinkData = $data['testops']['run']['externalLink'];
+            if (isset($externalLinkData['type']) && isset($externalLinkData['link'])) {
+                $config->testops->run->setExternalLink(new \Qase\PhpCommons\Models\Config\TestOpsExternalLinkType(
+                    $externalLinkData['type'],
+                    $externalLinkData['link']
+                ));
+            }
+        }
 
         if (isset($data['testops']['plan']['id'])) $config->testops->plan->setId($data['testops']['plan']['id']);
 
@@ -140,6 +150,12 @@ class ConfigLoader
                     break;
                 case "qase_testops_run_tags":
                     $this->config->testops->run->setTags(array_map('trim', explode(',', $value)));
+                    break;
+                case "qase_testops_run_external_link_type":
+                    $this->parseExternalLinkType($value);
+                    break;
+                case "qase_testops_run_external_link_url":
+                    $this->parseExternalLinkUrl($value);
                     break;
                 case "qase_testops_plan_id":
                     $this->config->testops->plan->setId($value);
@@ -213,5 +229,58 @@ class ConfigLoader
         
         $statuses = array_map('trim', explode(',', $value));
         $this->config->testops->setStatusFilter($statuses);
+    }
+
+    /**
+     * Parse external link type from environment variable
+     * 
+     * @param string $value External link type
+     */
+    private function parseExternalLinkType(string $value): void
+    {
+        if (empty(trim($value))) {
+            return;
+        }
+
+        $type = trim($value);
+        $currentExternalLink = $this->config->testops->run->getExternalLink();
+        
+        if ($currentExternalLink) {
+            $currentExternalLink->setType($type);
+        } else {
+            // We need both type and URL to create external link
+            // Store type temporarily and wait for URL
+            $this->tempExternalLinkType = $type;
+        }
+    }
+
+    /**
+     * Parse external link URL from environment variable
+     * 
+     * @param string $value External link URL
+     */
+    private function parseExternalLinkUrl(string $value): void
+    {
+        if (empty(trim($value))) {
+            return;
+        }
+
+        $url = trim($value);
+        $currentExternalLink = $this->config->testops->run->getExternalLink();
+        
+        if ($currentExternalLink) {
+            $currentExternalLink->setLink($url);
+        } else {
+            // Check if we have type from previous environment variable
+            if (isset($this->tempExternalLinkType)) {
+                $this->config->testops->run->setExternalLink(
+                    new \Qase\PhpCommons\Models\Config\TestOpsExternalLinkType(
+                        $this->tempExternalLinkType,
+                        $url
+                    )
+                );
+                unset($this->tempExternalLinkType);
+            }
+        }
     }
 }
