@@ -93,7 +93,7 @@ class TestOpsReporter implements InternalReporterInterface
         $envId = $this->getEnvironmentId($this->config->getEnvironment());
         $configurations = $this->prepareConfigurations();
 
-        return $this->client->createTestRun(
+        $runId = $this->client->createTestRun(
             $this->config->testops->getProject(),
             $this->config->testops->run->getTitle(),
             $this->config->testops->run->getDescription(),
@@ -102,6 +102,13 @@ class TestOpsReporter implements InternalReporterInterface
             $this->config->testops->run->getTags(),
             $configurations
         );
+
+        // Update external issue if configured
+        if ($this->config->testops->run->getExternalLink()) {
+            $this->updateExternalIssue($runId);
+        }
+
+        return $runId;
     }
 
     private function prepareConfigurations(): ?array
@@ -259,5 +266,35 @@ class TestOpsReporter implements InternalReporterInterface
 
         // Exclude result if its status is in the filter list
         return !in_array($status, $statusFilter, true);
+    }
+
+    /**
+     * Update external issue for the test run
+     * 
+     * @param int $runId Test run ID
+     */
+    private function updateExternalIssue(int $runId): void
+    {
+        try {
+            $externalLink = $this->config->testops->run->getExternalLink();
+            if (!$externalLink) {
+                return;
+            }
+
+            // Update external issue for the test run
+            $this->client->runUpdateExternalIssue(
+                $this->config->testops->getProject(),
+                $externalLink->getType(),
+                [
+                    [
+                        'run_id' => $runId,
+                        'external_issue' => $externalLink->getLink(),
+                    ]
+                ]
+            );
+        } catch (Exception $e) {
+            // Log error through the client's logger
+            error_log('Failed to update external issue: ' . $e->getMessage());
+        }
     }
 }

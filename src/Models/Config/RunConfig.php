@@ -9,6 +9,7 @@ class RunConfig
     public bool $complete = true;
     public ?int $id = null;
     public ?array $tags = null;
+    public ?TestOpsExternalLinkType $externalLink = null;
 
     public function __construct()
     {
@@ -63,5 +64,15 @@ class RunConfig
     public function setTags(?array $tags): void
     {
         $this->tags = $tags;
+    }
+
+    public function getExternalLink(): ?TestOpsExternalLinkType
+    {
+        return $this->externalLink;
+    }
+
+    public function setExternalLink(?TestOpsExternalLinkType $externalLink): void
+    {
+        $this->externalLink = $externalLink;
     }
 }

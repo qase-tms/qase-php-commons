@@ -17,6 +17,8 @@ use Qase\APIClientV1\Configuration;
 use Qase\APIClientV1\Model\ConfigurationCreate;
 use Qase\APIClientV1\Model\ConfigurationGroupCreate;
 use Qase\APIClientV1\Model\RunCreate;
+use Qase\APIClientV1\Model\RunexternalIssues;
+use Qase\APIClientV1\Model\RunexternalIssuesLinksInner;
 use Qase\PhpCommons\Interfaces\ClientInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Attachment;
@@ -302,6 +304,40 @@ class ApiClientV1 implements ClientInterface
         } catch (Exception $e) {
             $this->logger->error('Failed to create configuration item: ' . $e->getMessage());
             return null;
+        }
+    }
+
+    public function runUpdateExternalIssue(string $code, string $type, array $links): void
+    {
+        try {
+            $this->logger->debug('Update external issue for project: ' . $code . ', type: ' . $type);
+
+            // Map our enum values to API enum values
+            $apiType = $type === 'jiraCloud' ? RunexternalIssues::TYPE_CLOUD : RunexternalIssues::TYPE_SERVER;
+
+            // Create links array using API models
+            $apiLinks = [];
+            foreach ($links as $link) {
+                $linkModel = new RunexternalIssuesLinksInner();
+                $linkModel->setRunId($link['run_id']);
+                $linkModel->setExternalIssue($link['external_issue']);
+                $apiLinks[] = $linkModel;
+            }
+
+            // Create the request model
+            $runExternalIssues = new RunexternalIssues();
+            $runExternalIssues->setType($apiType);
+            $runExternalIssues->setLinks($apiLinks);
+
+            $this->logger->debug('External issue update request: ' . json_encode($runExternalIssues));
+
+            // Use the API client
+            $runApi = new RunsApi($this->client, $this->clientConfig);
+            $runApi->runUpdateExternalIssue($code, $runExternalIssues);
+
+            $this->logger->info('External issue updated successfully');
+        } catch (Exception $e) {
+            $this->logger->error('Failed to update external issue: ' . $e->getMessage());
         }
     }
 }

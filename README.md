@@ -46,6 +46,8 @@ All configuration options are listed in the table below:
 | Qase test run description                                                                                                  | `testops.run.description`  | `QASE_TESTOPS_RUN_DESCRIPTION`  | `<Framework name> automated run`        | No       | Any string                 |
 | Qase test run complete                                                                                                     | `testops.run.complete`     | `QASE_TESTOPS_RUN_COMPLETE`     | `True`                                  |          | `True`, `False`            |
 | Qase test run tags | `testops.run.tags`         | `QASE_TESTOPS_RUN_TAGS`         | undefined                               | No       | Config: array of strings, Env: comma-separated string |
+| External issue type | `testops.run.externalLink.type` | `QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE` | undefined | No | `jiraCloud`, `jiraServer` |
+| External issue URL | `testops.run.externalLink.link` | `QASE_TESTOPS_RUN_EXTERNAL_LINK_URL` | undefined | No | Any valid URL string |
 | Qase test plan ID                                                                                                          | `testops.plan.id`          | `QASE_TESTOPS_PLAN_ID`          | undefined                               | No       | Any integer                |
 | Size of batch for sending test results                                                                                     | `testops.batch.size`       | `QASE_TESTOPS_BATCH_SIZE`       | `200`                                   | No       | Any integer                |
 | Enable defects for failed test cases                                                                                       | `testops.defect`           | `QASE_TESTOPS_DEFECT`           | `False`                                 | No       | `True`, `False`            |
@@ -80,7 +82,11 @@ All configuration options are listed in the table below:
       "title": "Regress run",
       "description": "Regress run description",
       "complete": true,
-      "tags": ["tag1", "tag2"]
+      "tags": ["tag1", "tag2"],
+      "externalLink": {
+        "type": "jiraCloud",
+        "link": "PROJ-123"
+      }
     },
     "defect": false,
     "project": "<project_code>",
@@ -117,6 +123,8 @@ You can also configure configurations using environment variables:
 export QASE_TESTOPS_CONFIGURATIONS_VALUES="browser=chrome,version=latest,environment=staging"
 export QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true
 export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
+export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
+export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
 ```
 
 The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key=value pairs.
@@ -157,3 +165,40 @@ export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
 - `untested` - Test was not tested
 
 When `statusFilter` is configured, results with the specified statuses will be excluded from being sent to Qase TestOps.
+
+### External Issue Integration
+
+You can link test runs to external issues (like Jira tickets) by configuring the `externalLink` option:
+
+**Config file example:**
+```json
+{
+  "testops": {
+    "run": {
+      "externalLink": {
+        "type": "jiraCloud",
+        "link": "PROJ-123"
+      }
+    }
+  }
+}
+```
+
+**Environment variables example:**
+```bash
+export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
+export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
+```
+
+**Supported external issue types:**
+- `jiraCloud` - For Jira Cloud instances
+- `jiraServer` - For Jira Server/Data Center instances
+
+When an external link is configured, the system will automatically associate the test run with the specified external issue after the run is created.
+
+**Technical Details:**
+- External issue functionality uses the Qase API v1 client
+- The system automatically maps internal enum values to API enum values:
+  - `jiraCloud` → `jira-cloud`
+  - `jiraServer` → `jira-server`
+- API calls are made using the official Qase API client models (`RunexternalIssues` and `RunexternalIssuesLinksInner`)

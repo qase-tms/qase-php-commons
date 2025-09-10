@@ -156,4 +156,11 @@ class ApiClientV2 extends ApiClientV1
 
         return $hashes;
     }
+
+    public function runUpdateExternalIssue(string $code, string $type, array $links): void
+    {
+        // External issue functionality is only available in API v1
+        // Delegate to parent class (ApiClientV1) implementation
+        parent::runUpdateExternalIssue($code, $type, $links);
+    }
 }
