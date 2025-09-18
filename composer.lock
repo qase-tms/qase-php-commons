@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cddb601bffdaf562f18027f6972fc8fb",
+    "content-hash": "f298f9fe7fff3551ae8db47f9bbc40b8",
     "packages": [
         {
             "name": "brick/math",
@@ -548,17 +548,11 @@
         },
         {
             "name": "qase/qase-api-client",
-            "version": "1.1.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/qase-tms/qase-api-client.git",
-                "reference": "148114f7fecbc8aa5bd80c9afa924594aba9aa72"
-            },
+            "version": "1.1.5",
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/qase-tms/qase-api-client/zipball/148114f7fecbc8aa5bd80c9afa924594aba9aa72",
-                "reference": "148114f7fecbc8aa5bd80c9afa924594aba9aa72",
-                "shasum": ""
+                "type": "path",
+                "url": "/Users/gda/Documents/github/qase-tms/qase-api-client",
+                "reference": "148114f7fecbc8aa5bd80c9afa924594aba9aa72"
             },
             "require": {
                 "ext-curl": "*",
@@ -577,7 +571,16 @@
                     "Qase\\APIClientV1\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Tests\\": "test/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
             "license": [
                 "Apache-2.0"
             ],
@@ -596,11 +599,9 @@
                 "qase",
                 "tms"
             ],
-            "support": {
-                "issues": "https://github.com/qase-tms/qase-api-client/issues",
-                "source": "https://github.com/qase-tms/qase-api-client/tree/v1.1.4"
-            },
-            "time": "2025-08-13T10:54:39+00:00"
+            "transport-options": {
+                "relative": false
+            }
         },
         {
             "name": "qase/qase-api-v2-client",
@@ -1646,16 +1647,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "9.6.25",
+            "version": "9.6.27",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "049c011e01be805202d8eebedef49f769a8ec7b7"
+                "reference": "0a9aa4440b6a9528cf360071502628d717af3e0a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/049c011e01be805202d8eebedef49f769a8ec7b7",
-                "reference": "049c011e01be805202d8eebedef49f769a8ec7b7",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/0a9aa4440b6a9528cf360071502628d717af3e0a",
+                "reference": "0a9aa4440b6a9528cf360071502628d717af3e0a",
                 "shasum": ""
             },
             "require": {
@@ -1729,7 +1730,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.25"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/9.6.27"
             },
             "funding": [
                 {
@@ -1753,7 +1754,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-08-20T14:38:31+00:00"
+            "time": "2025-09-14T06:18:03+00:00"
         },
         {
             "name": "sebastian/cli-parser",
