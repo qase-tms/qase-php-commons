@@ -313,7 +313,7 @@ class ApiClientV1 implements ClientInterface
             $this->logger->debug('Update external issue for project: ' . $code . ', type: ' . $type);
 
             // Map our enum values to API enum values
-            $apiType = $type === 'jiraCloud' ? RunexternalIssues::TYPE_CLOUD : RunexternalIssues::TYPE_SERVER;
+            $apiType = $type === 'jiraCloud' ? RunexternalIssues::TYPE_JIRA_CLOUD : RunexternalIssues::TYPE_JIRA_SERVER;
 
             // Create links array using API models
             $apiLinks = [];

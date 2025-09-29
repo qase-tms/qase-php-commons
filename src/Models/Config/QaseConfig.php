@@ -12,6 +12,7 @@ class QaseConfig
     public ?string $environment = null;
     public ?string $rootSuite = null;
     public bool $debug;
+    public array $statusMapping = [];
     public TestopsConfig $testops;
     public ReportConfig $report;
 
@@ -76,5 +77,25 @@ class QaseConfig
     public function setDebug(bool $debug): void
     {
         $this->debug = $debug;
+    }
+
+    /**
+     * Get status mapping configuration
+     * 
+     * @return array<string, string>
+     */
+    public function getStatusMapping(): array
+    {
+        return $this->statusMapping;
+    }
+
+    /**
+     * Set status mapping configuration
+     * 
+     * @param array<string, string> $statusMapping
+     */
+    public function setStatusMapping(array $statusMapping): void
+    {
+        $this->statusMapping = $statusMapping;
     }
 }

@@ -7,6 +7,7 @@ use Qase\PhpCommons\Interfaces\InternalReporterInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Result;
 use Qase\PhpCommons\Reporters\CoreReporter;
+use Qase\PhpCommons\Utils\StatusMapping;
 use Exception;
 
 class CoreReporterTest extends TestCase
@@ -22,14 +23,21 @@ class CoreReporterTest extends TestCase
         $this->fallbackReporterMock = $this->createMock(InternalReporterInterface::class);
     }
 
+    private function createCoreReporter(?InternalReporterInterface $primaryReporter = null, ?InternalReporterInterface $fallbackReporter = null, ?string $rootSuite = null): CoreReporter
+    {
+        $statusMapping = new StatusMapping($this->loggerMock);
+        return new CoreReporter(
+            $this->loggerMock,
+            $primaryReporter ?? $this->primaryReporterMock,
+            $fallbackReporter ?? $this->fallbackReporterMock,
+            $rootSuite,
+            $statusMapping
+        );
+    }
+
     public function testStartRunExecutesWithoutException(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         $this->primaryReporterMock->expects($this->once())
             ->method('startRun');
@@ -39,12 +47,7 @@ class CoreReporterTest extends TestCase
 
     public function testStartRunFallbackOnException(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         // Mock primary reporter to throw an exception
         $this->primaryReporterMock->expects($this->once())
@@ -61,12 +64,7 @@ class CoreReporterTest extends TestCase
 
     public function testCompleteRunExecutesWithoutException(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         $this->primaryReporterMock->expects($this->once())
             ->method('completeRun');
@@ -76,12 +74,7 @@ class CoreReporterTest extends TestCase
 
     public function testCompleteRunFallbackOnException(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         $this->primaryReporterMock->expects($this->once())
             ->method('completeRun')
@@ -97,12 +90,7 @@ class CoreReporterTest extends TestCase
     {
         $result = new Result();
 
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         $this->primaryReporterMock->expects($this->once())
             ->method('addResult')
@@ -113,12 +101,7 @@ class CoreReporterTest extends TestCase
 
     public function testAddResultFallbackOnException(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         $this->primaryReporterMock->expects($this->once())
             ->method('addResult')
@@ -132,12 +115,7 @@ class CoreReporterTest extends TestCase
 
     public function testRunFallbackReporterWhenPrimaryReporterFails(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         // Mock failure of primary reporter
         $this->primaryReporterMock->expects($this->once())
@@ -154,12 +132,7 @@ class CoreReporterTest extends TestCase
 
     public function testRunFallbackReporterWhenFallbackFails(): void
     {
-        $coreReporter = new CoreReporter(
-            $this->loggerMock,
-            $this->primaryReporterMock,
-            $this->fallbackReporterMock,
-            null
-        );
+        $coreReporter = $this->createCoreReporter();
 
         // Simulate primary reporter running, but fallback reporter fails
         $this->primaryReporterMock->expects($this->once())
