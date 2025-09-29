@@ -50,8 +50,8 @@ class ExternalLinkApiTest extends TestCase
     public function testApiModelConstants(): void
     {
         // Test that the API model constants are correct
-        $this->assertEquals('jira-cloud', RunexternalIssues::TYPE_CLOUD);
-        $this->assertEquals('jira-server', RunexternalIssues::TYPE_SERVER);
+        $this->assertEquals('jira-cloud', RunexternalIssues::TYPE_JIRA_CLOUD);
+        $this->assertEquals('jira-server', RunexternalIssues::TYPE_JIRA_SERVER);
     }
 
     public function testApiModelCreation(): void
@@ -65,10 +65,10 @@ class ExternalLinkApiTest extends TestCase
         $this->assertEquals('PROJ-123', $link->getExternalIssue());
         
         $externalIssues = new RunexternalIssues();
-        $externalIssues->setType(RunexternalIssues::TYPE_CLOUD);
+        $externalIssues->setType(RunexternalIssues::TYPE_JIRA_CLOUD);
         $externalIssues->setLinks([$link]);
         
-        $this->assertEquals(RunexternalIssues::TYPE_CLOUD, $externalIssues->getType());
+        $this->assertEquals(RunexternalIssues::TYPE_JIRA_CLOUD, $externalIssues->getType());
         $this->assertCount(1, $externalIssues->getLinks());
     }
 }

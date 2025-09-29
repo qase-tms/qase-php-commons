@@ -19,8 +19,8 @@ composer require qase/php-commons
 
 Qase PHP Reporters can be configured in multiple ways:
 
-- using a config file `qase.config.json`
-- using environment variables
+* using a config file `qase.config.json`
+* using environment variables
 
 All configuration options are listed in the table below:
 
@@ -54,8 +54,9 @@ All configuration options are listed in the table below:
 | Configuration values to associate with test run                                                                            | `testops.configurations.values` | `QASE_TESTOPS_CONFIGURATIONS_VALUES` | `[]`                                   | No       | Comma-separated key=value pairs |
 | Create configuration groups and values if they don't exist                                                                | `testops.configurations.createIfNotExists` | `QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS` | `False`                                 | No       | `True`, `False`            |
 | Status filter for test results                                                                                             | `testops.statusFilter`     | `QASE_TESTOPS_STATUS_FILTER`     | `[]`                                  | No       | Comma-separated string       |
+| Status mapping for test results                                                                                            | `statusMapping`           | `QASE_STATUS_MAPPING`            | `{}`                                  | No       | JSON object or comma-separated key=value pairs |
 
-### Example `qase.config.json` config:
+### Example `qase.config.json` config
 
 ```json
 {
@@ -64,6 +65,10 @@ All configuration options are listed in the table below:
   "debug": false,
   "environment": "local",
   "captureLogs": false,
+  "statusMapping": {
+    "invalid": "failed",
+    "skipped": "passed"
+  },
   "report": {
     "driver": "local",
     "connection": {
@@ -115,7 +120,7 @@ All configuration options are listed in the table below:
 }
 ```
 
-### Environment Variables Example:
+### Environment Variables Example
 
 You can also configure configurations using environment variables:
 
@@ -125,6 +130,7 @@ export QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true
 export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
+export QASE_STATUS_MAPPING="invalid=failed,skipped=passed"
 ```
 
 The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key=value pairs.
@@ -132,9 +138,9 @@ The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key
 ### How Configurations Work
 
 Configurations in Qase TestOps work as follows:
-- **name** field represents the configuration group (e.g., "browser", "environment")
-- **value** field represents the configuration item within that group (e.g., "chrome", "staging")
-- When `createIfNotExists` is true, the system will:
+* **name** field represents the configuration group (e.g., "browser", "environment")
+* **value** field represents the configuration item within that group (e.g., "chrome", "staging")
+* When `createIfNotExists` is true, the system will:
   1. Create a configuration group with the specified name if it doesn't exist
   2. Create a configuration item with the specified value in that group
   3. Associate the configuration item ID with the test run
@@ -144,6 +150,7 @@ Configurations in Qase TestOps work as follows:
 You can filter out test results with specific statuses using the `statusFilter` configuration option:
 
 **Config file example:**
+
 ```json
 {
   "testops": {
@@ -153,24 +160,77 @@ You can filter out test results with specific statuses using the `statusFilter` 
 ```
 
 **Environment variable example:**
+
 ```bash
 export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
 ```
 
 **Available statuses:**
-- `passed` - Test passed successfully
-- `failed` - Test failed
-- `skipped` - Test was skipped
-- `blocked` - Test was blocked
-- `untested` - Test was not tested
+
+* `passed` - Test passed successfully
+* `failed` - Test failed
+* `skipped` - Test was skipped
+* `blocked` - Test was blocked
+* `untested` - Test was not tested
 
 When `statusFilter` is configured, results with the specified statuses will be excluded from being sent to Qase TestOps.
+
+### Status Mapping
+
+You can map (transform) test result statuses using the `statusMapping` configuration option. This is useful when you need to convert statuses from your testing framework to match Qase's expected statuses.
+
+**Config file example:**
+
+```json
+{
+  "statusMapping": {
+    "invalid": "failed",
+    "skipped": "passed"
+  }
+}
+```
+
+**Environment variable example:**
+
+```bash
+export QASE_STATUS_MAPPING="invalid=failed,skipped=passed"
+```
+
+**Available statuses for mapping:**
+
+* `passed` - Test passed successfully
+* `failed` - Test failed due to assertion error
+* `skipped` - Test was skipped
+* `blocked` - Test was blocked
+* `invalid` - Test failed due to non-assertion error (network issues, syntax errors)
+
+**How status mapping works:**
+
+* Status mapping is applied **before** status filtering
+* Mapping is applied to both test results and individual test steps
+* Invalid mappings are ignored with a warning message
+* Mapping is applied centrally for all reporters regardless of testing framework
+* Changes are logged for debugging purposes
+
+**Example scenarios:**
+
+1. **Convert invalid to failed**: Map `invalid` status to `failed` to treat infrastructure issues as test failures
+2. **Convert skipped to passed**: Map `skipped` status to `passed` to include skipped tests in pass rate calculations
+3. **Multiple mappings**: Apply different mappings for different statuses in a single configuration
+
+**Validation rules:**
+
+* Source and target statuses must be valid (from the list above)
+* Source and target cannot be the same (redundant mappings are ignored)
+* Case-sensitive validation (e.g., `PASSED` is invalid, use `passed`)
+* Non-string values are ignored
 
 ### External Issue Integration
 
 You can link test runs to external issues (like Jira tickets) by configuring the `externalLink` option:
 
 **Config file example:**
+
 ```json
 {
   "testops": {
@@ -185,20 +245,23 @@ You can link test runs to external issues (like Jira tickets) by configuring the
 ```
 
 **Environment variables example:**
+
 ```bash
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
 ```
 
 **Supported external issue types:**
-- `jiraCloud` - For Jira Cloud instances
-- `jiraServer` - For Jira Server/Data Center instances
+
+* `jiraCloud` - For Jira Cloud instances
+* `jiraServer` - For Jira Server/Data Center instances
 
 When an external link is configured, the system will automatically associate the test run with the specified external issue after the run is created.
 
 **Technical Details:**
-- External issue functionality uses the Qase API v1 client
-- The system automatically maps internal enum values to API enum values:
-  - `jiraCloud` → `jira-cloud`
-  - `jiraServer` → `jira-server`
-- API calls are made using the official Qase API client models (`RunexternalIssues` and `RunexternalIssuesLinksInner`)
+
+* External issue functionality uses the Qase API v1 client
+* The system automatically maps internal enum values to API enum values:
+  * `jiraCloud` → `jira-cloud`
+  * `jiraServer` → `jira-server`
+* API calls are made using the official Qase API client models (`RunexternalIssues` and `RunexternalIssuesLinksInner`)

@@ -14,6 +14,7 @@ use Qase\PhpCommons\Loggers\Logger;
 use Qase\PhpCommons\Models\Config\QaseConfig;
 use Qase\PhpCommons\Utils\HostInfo;
 use Qase\PhpCommons\Utils\StateManager;
+use Qase\PhpCommons\Utils\StatusMapping;
 
 class ReporterFactory
 {
@@ -29,7 +30,11 @@ class ReporterFactory
         $reporter = self::createInternalReporter($logger, $config, $state);
         $fallbackReporter = self::createInternalReporter($logger, $config, $state, true);
 
-        return new CoreReporter($logger, $reporter, $fallbackReporter, $config->getRootSuite());
+        // Create status mapping utility
+        $statusMapping = new StatusMapping($logger);
+        $statusMapping->setMapping($config->getStatusMapping());
+
+        return new CoreReporter($logger, $reporter, $fallbackReporter, $config->getRootSuite(), $statusMapping);
     }
 
     private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, bool $fallback = false): ?InternalReporterInterface

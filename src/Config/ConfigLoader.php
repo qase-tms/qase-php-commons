@@ -4,6 +4,7 @@ namespace Qase\PhpCommons\Config;
 
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Config\QaseConfig;
+use Qase\PhpCommons\Utils\StatusMapping;
 use RuntimeException;
 
 class ConfigLoader
@@ -59,6 +60,12 @@ class ConfigLoader
         if (isset($data['environment'])) $config->setEnvironment($data['environment']);
         if (isset($data['rootSuite'])) $config->setRootSuite($data['rootSuite']);
         if (isset($data['debug'])) $config->setDebug($data['debug']);
+
+        if (isset($data['statusMapping'])) {
+            $statusMapping = new StatusMapping(new \Qase\PhpCommons\Loggers\Logger(false));
+            $statusMapping->setMapping($data['statusMapping']);
+            $config->setStatusMapping($statusMapping->getMapping());
+        }
 
         if (isset($data['testops']['project'])) $config->testops->setProject($data['testops']['project']);
         if (isset($data['testops']['defect'])) $config->testops->setDefect($data['testops']['defect']);
@@ -123,6 +130,9 @@ class ConfigLoader
                     break;
                 case "qase_debug":
                     $this->config->setDebug($value);
+                    break;
+                case "qase_status_mapping":
+                    $this->parseStatusMapping($value);
                     break;
                 case "qase_testops_project":
                     $this->config->testops->setProject($value);
@@ -282,5 +292,23 @@ class ConfigLoader
                 unset($this->tempExternalLinkType);
             }
         }
+    }
+
+    /**
+     * Parse status mapping from environment variable
+     * Format: "invalid=failed,skipped=passed"
+     * 
+     * @param string $value Status mapping string
+     */
+    private function parseStatusMapping(string $value): void
+    {
+        if (empty(trim($value))) {
+            $this->config->setStatusMapping([]);
+            return;
+        }
+
+        $statusMapping = new StatusMapping(new \Qase\PhpCommons\Loggers\Logger(false));
+        $statusMapping->parseFromEnv($value);
+        $this->config->setStatusMapping($statusMapping->getMapping());
     }
 }
