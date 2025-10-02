@@ -24,7 +24,6 @@ abstract class BaseConfig
             }
         }
         $this->logger = $logger;
-
     }
 
     public function getReporterName(): string

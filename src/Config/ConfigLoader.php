@@ -60,6 +60,7 @@ class ConfigLoader
         if (isset($data['environment'])) $config->setEnvironment($data['environment']);
         if (isset($data['rootSuite'])) $config->setRootSuite($data['rootSuite']);
         if (isset($data['debug'])) $config->setDebug($data['debug']);
+        if (isset($data['logging'])) $config->setLogging($data['logging']);
 
         if (isset($data['statusMapping'])) {
             $statusMapping = new StatusMapping(new \Qase\PhpCommons\Loggers\Logger(false));
@@ -130,6 +131,12 @@ class ConfigLoader
                     break;
                 case "qase_debug":
                     $this->config->setDebug($value);
+                    break;
+                case "qase_logging_console":
+                    $this->parseLoggingConsole($value);
+                    break;
+                case "qase_logging_file":
+                    $this->parseLoggingFile($value);
                     break;
                 case "qase_status_mapping":
                     $this->parseStatusMapping($value);
@@ -292,6 +299,30 @@ class ConfigLoader
                 unset($this->tempExternalLinkType);
             }
         }
+    }
+
+    /**
+     * Parse logging console setting from environment variable
+     * 
+     * @param string $value Console logging setting (true/false)
+     */
+    private function parseLoggingConsole(string $value): void
+    {
+        $logging = $this->config->getLogging() ?? [];
+        $logging['console'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->config->setLogging($logging);
+    }
+
+    /**
+     * Parse logging file setting from environment variable
+     * 
+     * @param string $value File logging setting (true/false)
+     */
+    private function parseLoggingFile(string $value): void
+    {
+        $logging = $this->config->getLogging() ?? [];
+        $logging['file'] = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+        $this->config->setLogging($logging);
     }
 
     /**
