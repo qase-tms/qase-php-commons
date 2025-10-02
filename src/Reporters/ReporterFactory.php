@@ -22,7 +22,7 @@ class ReporterFactory
     {
         $configLoader = new ConfigLoader(new Logger(true));
         $config = $configLoader->getConfig();
-        $logger = new Logger($config->getDebug());
+        $logger = new Logger($config->getDebug(), $config->getLogging());
         $hostInfo = new HostInfo();
         $hostData = $hostInfo->getHostInfo($framework, $reporterName);
         $logger->debug("Host data: " . json_encode($hostData));
@@ -55,6 +55,6 @@ class ReporterFactory
     private static function prepareTestopsReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state): InternalReporterInterface
     {
         $client = new ApiClientV2($logger, $config->testops);
-        return new TestOpsReporter($client, $config, $state);
+        return new TestOpsReporter($client, $config, $state, $logger);
     }
 }

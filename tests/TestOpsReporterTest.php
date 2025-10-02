@@ -5,6 +5,7 @@ namespace Tests;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Qase\PhpCommons\Interfaces\ClientInterface;
+use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Interfaces\StateInterface;
 use Qase\PhpCommons\Models\Config\QaseConfig;
 use Qase\PhpCommons\Reporters\TestOpsReporter;
@@ -14,12 +15,14 @@ class TestOpsReporterTest extends TestCase
 {
     private $clientMock;
     private $stateMock;
+    private $loggerMock;
     private QaseConfig $config;
 
     protected function setUp(): void
     {
         $this->clientMock = $this->createMock(ClientInterface::class);
         $this->stateMock = $this->createMock(StateInterface::class);
+        $this->loggerMock = $this->createMock(LoggerInterface::class);
         $this->config = $this->getConfig();
     }
 
@@ -30,7 +33,7 @@ class TestOpsReporterTest extends TestCase
         $this->stateMock->method('startRun')
             ->willReturn(123);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         $this->assertSame(123, $this->getPrivateProperty($reporter, 'runId'));
@@ -47,7 +50,7 @@ class TestOpsReporterTest extends TestCase
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('Run with id 123 not found');
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
     }
 
@@ -59,7 +62,7 @@ class TestOpsReporterTest extends TestCase
             ->with('TEST_PROJECT', 123)
             ->willReturn(true);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         $this->assertSame(123, $this->getPrivateProperty($reporter, 'runId'));
@@ -73,7 +76,7 @@ class TestOpsReporterTest extends TestCase
             ->method('sendResults')
             ->with('TEST_PROJECT', 123, ['result1', 'result2']);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         $reporter->addResult('result1');
@@ -91,7 +94,7 @@ class TestOpsReporterTest extends TestCase
             ->method('sendResults')
             ->with('TEST_PROJECT', 123, ['result1', 'result2']);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         $reporter->addResult('result1');
@@ -116,7 +119,7 @@ class TestOpsReporterTest extends TestCase
                 return is_callable($callback);
             }));
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         $reporter->addResult('result1');
@@ -141,7 +144,7 @@ class TestOpsReporterTest extends TestCase
             ->method('completeRun')
             ->with($this->isType('callable'));
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
         $reporter->completeRun();
     }
@@ -155,7 +158,7 @@ class TestOpsReporterTest extends TestCase
         $this->clientMock->expects($this->never())
             ->method('completeTestRun');
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
         $reporter->completeRun();
     }
@@ -174,7 +177,7 @@ class TestOpsReporterTest extends TestCase
                 $this->createResultWithStatus('failed')
             ]);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         // Add results with different statuses
@@ -206,7 +209,7 @@ class TestOpsReporterTest extends TestCase
                 ]]
             );
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         // Add results with different statuses - all should be included
@@ -230,7 +233,7 @@ class TestOpsReporterTest extends TestCase
                 $this->createResultWithStatus('passed')
             ]);
 
-        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock);
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
 
         // Add results - one without status should be included

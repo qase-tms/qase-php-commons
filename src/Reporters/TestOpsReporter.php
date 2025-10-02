@@ -7,6 +7,7 @@ namespace Qase\PhpCommons\Reporters;
 use Exception;
 use Qase\PhpCommons\Interfaces\ClientInterface;
 use Qase\PhpCommons\Interfaces\InternalReporterInterface;
+use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Interfaces\StateInterface;
 use Qase\PhpCommons\Models\Config\QaseConfig;
 
@@ -16,14 +17,16 @@ class TestOpsReporter implements InternalReporterInterface
     private ClientInterface $client;
     private QaseConfig $config;
     private StateInterface $state;
+    private LoggerInterface $logger;
     private ?int $runId = null;
     private ?array $cachedConfigurationGroups = null;
 
-    public function __construct(ClientInterface $client, QaseConfig $config, StateInterface $state)
+    public function __construct(ClientInterface $client, QaseConfig $config, StateInterface $state, LoggerInterface $logger)
     {
         $this->client = $client;
         $this->config = $config;
         $this->state = $state;
+        $this->logger = $logger;
     }
 
     /**
@@ -293,8 +296,8 @@ class TestOpsReporter implements InternalReporterInterface
                 ]
             );
         } catch (Exception $e) {
-            // Log error through the client's logger
-            error_log('Failed to update external issue: ' . $e->getMessage());
+            // Log error through the centralized logger
+            $this->logger->error('Failed to update external issue: ' . $e->getMessage());
         }
     }
 }

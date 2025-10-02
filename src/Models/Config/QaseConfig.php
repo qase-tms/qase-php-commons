@@ -13,6 +13,7 @@ class QaseConfig
     public ?string $rootSuite = null;
     public bool $debug;
     public array $statusMapping = [];
+    public ?array $logging = null;
     public TestopsConfig $testops;
     public ReportConfig $report;
 
@@ -21,6 +22,7 @@ class QaseConfig
         $this->mode = Mode::OFF;
         $this->fallback = Mode::OFF;
         $this->debug = false;
+        $this->logging = null;
         $this->testops = new TestopsConfig();
         $this->report = new ReportConfig();
     }
@@ -97,5 +99,25 @@ class QaseConfig
     public function setStatusMapping(array $statusMapping): void
     {
         $this->statusMapping = $statusMapping;
+    }
+
+    /**
+     * Get logging configuration
+     * 
+     * @return array|null
+     */
+    public function getLogging(): ?array
+    {
+        return $this->logging;
+    }
+
+    /**
+     * Set logging configuration
+     * 
+     * @param array|null $logging
+     */
+    public function setLogging(?array $logging): void
+    {
+        $this->logging = $logging;
     }
 }
