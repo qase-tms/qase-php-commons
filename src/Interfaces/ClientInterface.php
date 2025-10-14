@@ -61,4 +61,13 @@ interface ClientInterface
      * @return void
      */
     public function runUpdateExternalIssue(string $code, string $type, array $links): void;
+
+    /**
+     * Enable public report for a test run
+     * 
+     * @param string $code Project code
+     * @param int $runId Test run ID
+     * @return string|null Public report link or null on failure
+     */
+    public function enablePublicReport(string $code, int $runId): ?string;
 }

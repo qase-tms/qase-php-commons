@@ -70,6 +70,7 @@ class ConfigLoader
 
         if (isset($data['testops']['project'])) $config->testops->setProject($data['testops']['project']);
         if (isset($data['testops']['defect'])) $config->testops->setDefect($data['testops']['defect']);
+        if (isset($data['testops']['showPublicReportLink'])) $config->testops->setShowPublicReportLink($data['testops']['showPublicReportLink']);
 
         if (isset($data['testops']['api']['token'])) $config->testops->api->setToken($data['testops']['api']['token']);
         if (isset($data['testops']['api']['host'])) $config->testops->api->setHost($data['testops']['api']['host']);
@@ -146,6 +147,9 @@ class ConfigLoader
                     break;
                 case "qase_testops_defect":
                     $this->config->testops->setDefect($value);
+                    break;
+                case "qase_testops_show_public_report_link":
+                    $this->config->testops->setShowPublicReportLink(filter_var($value, FILTER_VALIDATE_BOOLEAN));
                     break;
                 case "qase_testops_api_token":
                     $this->config->testops->api->setToken($value);

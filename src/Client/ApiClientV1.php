@@ -340,4 +340,36 @@ class ApiClientV1 implements ClientInterface
             $this->logger->error('Failed to update external issue: ' . $e->getMessage());
         }
     }
+
+    public function enablePublicReport(string $code, int $runId): ?string
+    {
+        try {
+            $this->logger->debug('Enable public report for run: ' . $runId);
+
+            // Make PATCH request to enable public report
+            $response = $this->client->request('PATCH', $this->clientConfig->getHost() . '/run/' . $code . '/' . $runId . '/public', [
+                'headers' => [
+                    'Token' => $this->config->api->getToken(),
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'status' => true,
+                ],
+            ]);
+
+            $responseData = json_decode($response->getBody()->getContents(), true);
+            
+            if (isset($responseData['result']['hash'])) {
+                $publicUrl = $this->appUrl . '/public/report/' . $responseData['result']['hash'];
+                $this->logger->info('Public report link: ' . $publicUrl);
+                return $publicUrl;
+            }
+
+            $this->logger->warning('Public report hash not found in response');
+            return null;
+        } catch (Exception $e) {
+            $this->logger->warning('Failed to generate public report link: ' . $e->getMessage());
+            return null;
+        }
+    }
 }
