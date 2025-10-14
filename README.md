@@ -51,6 +51,7 @@ All configuration options are listed in the table below:
 | Qase test plan ID                                                                                                          | `testops.plan.id`          | `QASE_TESTOPS_PLAN_ID`          | undefined                               | No       | Any integer                |
 | Size of batch for sending test results                                                                                     | `testops.batch.size`       | `QASE_TESTOPS_BATCH_SIZE`       | `200`                                   | No       | Any integer                |
 | Enable defects for failed test cases                                                                                       | `testops.defect`           | `QASE_TESTOPS_DEFECT`           | `False`                                 | No       | `True`, `False`            |
+| Enable public report link generation after run completion                                                                 | `testops.showPublicReportLink` | `QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK` | `False`                                 | No       | `True`, `False`            |
 | Configuration values to associate with test run                                                                            | `testops.configurations.values` | `QASE_TESTOPS_CONFIGURATIONS_VALUES` | `[]`                                   | No       | Comma-separated key=value pairs |
 | Create configuration groups and values if they don't exist                                                                | `testops.configurations.createIfNotExists` | `QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS` | `False`                                 | No       | `True`, `False`            |
 | Status filter for test results                                                                                             | `testops.statusFilter`     | `QASE_TESTOPS_STATUS_FILTER`     | `[]`                                  | No       | Comma-separated string       |
@@ -94,6 +95,7 @@ All configuration options are listed in the table below:
       }
     },
     "defect": false,
+    "showPublicReportLink": true,
     "project": "<project_code>",
     "batch": {
       "size": 100
@@ -130,6 +132,7 @@ export QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true
 export QASE_TESTOPS_STATUS_FILTER="skipped,blocked,untested"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
+export QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=true
 export QASE_STATUS_MAPPING="invalid=failed,skipped=passed"
 ```
 
@@ -138,6 +141,7 @@ The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key
 ### How Configurations Work
 
 Configurations in Qase TestOps work as follows:
+
 * **name** field represents the configuration group (e.g., "browser", "environment")
 * **value** field represents the configuration item within that group (e.g., "chrome", "staging")
 * When `createIfNotExists` is true, the system will:

@@ -7,6 +7,7 @@ class TestopsConfig
 {
     public ?string $project = null;
     public bool $defect = false;
+    public bool $showPublicReportLink = false;
     public ApiConfig $api;
     public RunConfig $run;
     public PlanConfig $plan;
@@ -51,5 +52,15 @@ class TestopsConfig
     public function setStatusFilter(array $statusFilter): void
     {
         $this->statusFilter = $statusFilter;
+    }
+
+    public function isShowPublicReportLink(): bool
+    {
+        return $this->showPublicReportLink;
+    }
+
+    public function setShowPublicReportLink(bool $showPublicReportLink): void
+    {
+        $this->showPublicReportLink = $showPublicReportLink;
     }
 }

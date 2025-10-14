@@ -58,6 +58,11 @@ class TestOpsReporter implements InternalReporterInterface
         $this->state->completeRun(
             function () {
                 $this->client->completeTestRun($this->config->testops->getProject(), $this->runId);
+                
+                // Enable public report if configured
+                if ($this->config->testops->isShowPublicReportLink()) {
+                    $this->enablePublicReportForRun();
+                }
             }
         );
     }
@@ -298,6 +303,25 @@ class TestOpsReporter implements InternalReporterInterface
         } catch (Exception $e) {
             // Log error through the centralized logger
             $this->logger->error('Failed to update external issue: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Enable public report for the current test run
+     */
+    private function enablePublicReportForRun(): void
+    {
+        try {
+            $publicUrl = $this->client->enablePublicReport(
+                $this->config->testops->getProject(),
+                $this->runId
+            );
+            
+            // Logger already prints the link inside the client method
+            // No need to print again here
+        } catch (Exception $e) {
+            // Log warning through the centralized logger
+            $this->logger->warning('Failed to enable public report: ' . $e->getMessage());
         }
     }
 }

@@ -13,6 +13,7 @@ class Logger implements LoggerInterface
         'INFO' => "\033[32m",  // Green
         'DEBUG' => "\033[36m", // Blue
         'ERROR' => "\033[31m", // Red
+        'WARNING' => "\033[33m", // Yellow
         'RESET' => "\033[0m",  // Reset color
     ];
     private bool $debug;
@@ -64,6 +65,10 @@ class Logger implements LoggerInterface
         $this->writeLog($message, 'ERROR');
     }
 
+    public function warning(string $message): void
+    {
+        $this->writeLog($message, 'WARNING');
+    }
 
     private function writeLog(string $message, string $level): void
     {
