@@ -155,4 +155,84 @@ class ConfigLoaderTest extends TestCase
         // Clean up
         putenv('QASE_TESTOPS_STATUS_FILTER');
     }
+
+    /**
+     * @dataProvider booleanProvider
+     */
+    public function testDebugFromEnv(bool $expected): void
+    {
+        // Set environment variable with spaces
+        putenv("QASE_DEBUG=$expected");
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $debug = $config->getDebug();
+        $this->assertEquals($expected, $debug);
+
+        // Clean up
+        putenv('QASE_DEBUG');
+    }
+
+    /**
+     * @dataProvider booleanProvider
+     */
+    public function testDefectFromEnv(bool $expected): void
+    {
+        // Set environment variable with spaces
+        putenv("QASE_TESTOPS_DEFECT=$expected");
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $isDefect = $config->testops->isDefect();
+        $this->assertEquals($expected, $isDefect);
+
+        // Clean up
+        putenv('QASE_TESTOPS_DEFECT');
+    }
+
+    /**
+     * @dataProvider booleanProvider
+     */
+    public function testRunCompleteFromEnv(bool $expected): void
+    {
+        // Set environment variable with spaces
+        putenv("QASE_TESTOPS_RUN_COMPLETE=$expected");
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $isComplete = $config->testops->run->isComplete();
+        $this->assertEquals($expected, $isComplete);
+
+        // Clean up
+        putenv('QASE_TESTOPS_RUN_COMPLETE');
+    }
+
+    /**
+     * @dataProvider booleanProvider
+     */
+    public function testCreateConfigurationsIfNotExistFromEnv(bool $expected): void
+    {
+        // Set environment variable with spaces
+        putenv("QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=$expected");
+
+        $configLoader = new ConfigLoader($this->logger);
+        $config = $configLoader->getConfig();
+
+        $isCreateIfNotExists = $config->testops->configurations->isCreateIfNotExists();
+        $this->assertEquals($expected, $isCreateIfNotExists);
+
+        // Clean up
+        putenv('QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS');
+    }
+
+    public static function booleanProvider(): array
+    {
+        return [
+            [true],
+            [false],
+        ];
+    }
 } 
