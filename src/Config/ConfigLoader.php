@@ -131,7 +131,7 @@ class ConfigLoader
                     $this->config->setRootSuite($value);
                     break;
                 case "qase_debug":
-                    $this->config->setDebug($value);
+                    $this->config->setDebug(filter_var($value, FILTER_VALIDATE_BOOLEAN));
                     break;
                 case "qase_logging_console":
                     $this->parseLoggingConsole($value);
@@ -146,7 +146,7 @@ class ConfigLoader
                     $this->config->testops->setProject($value);
                     break;
                 case "qase_testops_defect":
-                    $this->config->testops->setDefect($value);
+                    $this->config->testops->setDefect(filter_var($value, FILTER_VALIDATE_BOOLEAN));
                     break;
                 case "qase_testops_show_public_report_link":
                     $this->config->testops->setShowPublicReportLink(filter_var($value, FILTER_VALIDATE_BOOLEAN));
@@ -167,7 +167,7 @@ class ConfigLoader
                     $this->config->testops->run->setDescription($value);
                     break;
                 case "qase_testops_run_complete":
-                    $this->config->testops->run->setComplete($value);
+                    $this->config->testops->run->setComplete(filter_var($value, FILTER_VALIDATE_BOOLEAN));
                     break;
                 case "qase_testops_run_tags":
                     $this->config->testops->run->setTags(array_map('trim', explode(',', $value)));
@@ -188,7 +188,7 @@ class ConfigLoader
                     $this->parseConfigurationValues($value);
                     break;
                 case "qase_testops_configurations_create_if_not_exists":
-                    $this->config->testops->configurations->setCreateIfNotExists($value);
+                    $this->config->testops->configurations->setCreateIfNotExists(filter_var($value, FILTER_VALIDATE_BOOLEAN));
                     break;
                 case "qase_testops_status_filter":
                     $this->parseStatusFilter($value);
