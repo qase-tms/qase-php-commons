@@ -146,15 +146,20 @@ class ApiClientV2 extends ApiClientV1
 
     private function convertAttachments(array $attachments): array
     {
-        $hashes = [];
-        foreach ($attachments as $item) {
-            $result = $this->uploadAttachment($this->config->getProject(), $item);
-            if ($result) {
-                $hashes[] = $result;
-            }
+        if (empty($attachments)) {
+            return [];
         }
 
-        return $hashes;
+        // Upload all attachments at once (method handles validation and batching if needed)
+        $result = $this->uploadAttachment($this->config->getProject(), $attachments);
+        
+        if (is_array($result)) {
+            return $result;
+        } elseif (is_string($result)) {
+            return [$result];
+        }
+
+        return [];
     }
 
     public function runUpdateExternalIssue(string $code, string $type, array $links): void

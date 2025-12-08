@@ -184,33 +184,217 @@ class ApiClientV1 implements ClientInterface
         }
     }
 
-    public function uploadAttachment(string $code, Attachment $attachment): ?string
+    /**
+     * Upload one or multiple attachments
+     * 
+     * Limitations:
+     * - Up to 32 MB per file
+     * - Up to 128 MB per single request
+     * - Up to 20 files per single request
+     * 
+     * @param string $code Project code
+     * @param Attachment|Attachment[] $attachments Single attachment or array of attachments
+     * @return string|string[]|null Hash(es) of uploaded attachment(s) or null on failure
+     */
+    public function uploadAttachment(string $code, Attachment|array $attachments): string|array|null
     {
+        // Normalize to array
+        $attachmentsArray = is_array($attachments) ? $attachments : [$attachments];
+        
+        // Check for empty array
+        if (empty($attachmentsArray)) {
+            $this->logger->warning('Empty attachments array provided');
+            return is_array($attachments) ? [] : null;
+        }
+        
         try {
-            $this->logger->debug('Upload attachment: ' . json_encode($attachment));
+            $this->logger->debug('Upload ' . count($attachmentsArray) . ' attachment(s)');
 
-            $attachApi = new AttachmentsApi($this->client, $this->clientConfig);
-            if ($attachment->path) {
-                $attachmentId = $attachApi->uploadAttachment($code, new SplFileObject($attachment->path));
-            } elseif ($attachment->content) {
-                $filepath = rtrim(getcwd(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $attachment->title;
-                if (file_put_contents($filepath, $attachment->content) === false) {
-                    $this->logger->error('Can not save attachment: ' . $filepath);
-                    return null;
-                }
-                $attachmentId = $attachApi->uploadAttachment($code, new SplFileObject($filepath));
-                if (unlink($filepath) === false) {
-                    $this->logger->error('Can not remove attachment: ' . $filepath);
-                }
-            } else {
-                return null;
+            // Filter and validate individual file constraints (skip invalid files)
+            $validAttachments = $this->filterValidAttachments($attachmentsArray);
+            
+            if (empty($validAttachments)) {
+                $this->logger->warning('No valid attachments to upload after filtering');
+                return is_array($attachments) ? [] : null;
             }
 
-            return $attachmentId->getResult()[0]->getHash();
+            // Split into batches
+            $batches = $this->splitIntoBatches($validAttachments);
+            $this->logger->debug('Split into ' . count($batches) . ' batch(es)');
+
+            $allHashes = [];
+            $attachApi = new AttachmentsApi($this->client, $this->clientConfig);
+
+            // Upload each batch
+            foreach ($batches as $batchIndex => $batch) {
+                $this->logger->debug('Uploading batch ' . ($batchIndex + 1) . '/' . count($batches) . ' with ' . count($batch) . ' file(s)');
+                
+                $fileObjects = [];
+                $tempFiles = [];
+
+                // Prepare files for this batch
+                foreach ($batch as $attachment) {
+                    if ($attachment->path) {
+                        $fileObjects[] = new SplFileObject($attachment->path);
+                    } elseif ($attachment->content) {
+                        $filepath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . uniqid('qase_attach_', true) . '_' . ($attachment->title ?? 'attachment');
+                        if (file_put_contents($filepath, $attachment->content) === false) {
+                            $this->logger->error('Can not save attachment: ' . $filepath);
+                            // Clean up already created temp files
+                            foreach ($tempFiles as $tempFile) {
+                                if (file_exists($tempFile)) {
+                                    unlink($tempFile);
+                                }
+                            }
+                            return null;
+                        }
+                        $fileObjects[] = new SplFileObject($filepath);
+                        $tempFiles[] = $filepath;
+                    } else {
+                        $this->logger->error('Attachment has neither path nor content');
+                        // Clean up temp files
+                        foreach ($tempFiles as $tempFile) {
+                            if (file_exists($tempFile)) {
+                                unlink($tempFile);
+                            }
+                        }
+                        return null;
+                    }
+                }
+
+                // Upload batch
+                $result = $attachApi->uploadAttachment($code, $fileObjects);
+
+                // Clean up temp files for this batch
+                foreach ($tempFiles as $tempFile) {
+                    if (file_exists($tempFile) && unlink($tempFile) === false) {
+                        $this->logger->error('Can not remove temporary attachment: ' . $tempFile);
+                    }
+                }
+
+                // Extract hashes from result
+                if ($result && $result->getResult()) {
+                    foreach ($result->getResult() as $attachmentResult) {
+                        $allHashes[] = $attachmentResult->getHash();
+                    }
+                }
+            }
+
+            // Return single hash if single attachment was provided, array otherwise
+            if (!is_array($attachments)) {
+                return $allHashes[0] ?? null;
+            }
+
+            return $allHashes;
         } catch (Exception $e) {
-            $this->logger->error('Failed to upload attachment: ' . $e->getMessage());
+            $this->logger->error('Failed to upload attachment(s): ' . $e->getMessage());
             return null;
         }
+    }
+
+    /**
+     * Filter attachments and return only valid ones, logging errors for invalid files
+     * 
+     * @param Attachment[] $attachments
+     * @return Attachment[] Array of valid attachments
+     */
+    private function filterValidAttachments(array $attachments): array
+    {
+        $maxFileSize = 32 * 1024 * 1024; // 32 MB
+        $validAttachments = [];
+
+        foreach ($attachments as $index => $attachment) {
+            $fileSize = 0;
+            $fileName = $attachment->title ?? $attachment->path ?? "attachment at index {$index}";
+
+            // Check if file has path or content
+            if ($attachment->path) {
+                if (!file_exists($attachment->path)) {
+                    $this->logger->warning("Skipping attachment '{$fileName}': file not found: {$attachment->path}");
+                    continue;
+                }
+                $fileSize = filesize($attachment->path);
+            } elseif ($attachment->content) {
+                $fileSize = strlen($attachment->content);
+            } else {
+                $this->logger->warning("Skipping attachment '{$fileName}': has neither path nor content");
+                continue;
+            }
+
+            // Check file size
+            if ($fileSize > $maxFileSize) {
+                $fileSizeMB = round($fileSize / 1024 / 1024, 2);
+                $this->logger->warning("Skipping attachment '{$fileName}': file size {$fileSizeMB} MB exceeds maximum of 32 MB per file");
+                continue;
+            }
+
+            $validAttachments[] = $attachment;
+        }
+
+        $skippedCount = count($attachments) - count($validAttachments);
+        if ($skippedCount > 0) {
+            $this->logger->info("Filtered out {$skippedCount} invalid attachment(s), proceeding with " . count($validAttachments) . " valid attachment(s)");
+        }
+
+        return $validAttachments;
+    }
+
+    /**
+     * Split attachments into batches respecting API constraints
+     * 
+     * @param Attachment[] $attachments
+     * @return Attachment[][] Array of batches
+     */
+    private function splitIntoBatches(array $attachments): array
+    {
+        $maxFilesPerBatch = 20;
+        $maxSizePerBatch = 128 * 1024 * 1024; // 128 MB
+
+        $batches = [];
+        $currentBatch = [];
+        $currentBatchSize = 0;
+
+        foreach ($attachments as $attachment) {
+            // Get file size (files should be validated already, but add safety check)
+            $fileSize = 0;
+            if ($attachment->path) {
+                if (file_exists($attachment->path)) {
+                    $fileSize = filesize($attachment->path);
+                } else {
+                    $this->logger->warning("Skipping attachment in batch: file not found: {$attachment->path}");
+                    continue;
+                }
+            } elseif ($attachment->content) {
+                $fileSize = strlen($attachment->content);
+            } else {
+                $this->logger->warning("Skipping attachment in batch: has neither path nor content");
+                continue;
+            }
+
+            // Check if we need to start a new batch
+            $wouldExceedFileLimit = count($currentBatch) >= $maxFilesPerBatch;
+            $wouldExceedSizeLimit = ($currentBatchSize + $fileSize) > $maxSizePerBatch;
+
+            if ($wouldExceedFileLimit || $wouldExceedSizeLimit) {
+                // Save current batch and start a new one
+                if (!empty($currentBatch)) {
+                    $batches[] = $currentBatch;
+                    $currentBatch = [];
+                    $currentBatchSize = 0;
+                }
+            }
+
+            // Add file to current batch
+            $currentBatch[] = $attachment;
+            $currentBatchSize += $fileSize;
+        }
+
+        // Add the last batch if it's not empty
+        if (!empty($currentBatch)) {
+            $batches[] = $currentBatch;
+        }
+
+        return $batches;
     }
 
     public function sendResults(string $code, int $runId, array $results): void

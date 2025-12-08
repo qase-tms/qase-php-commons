@@ -21,7 +21,19 @@ interface ClientInterface
 
     public function isTestRunExist(string $code, int $runId): bool;
 
-    public function uploadAttachment(string $code, Attachment $attachment): ?string;
+    /**
+     * Upload one or multiple attachments
+     * 
+     * Limitations:
+     * - Up to 32 MB per file
+     * - Up to 128 MB per single request
+     * - Up to 20 files per single request
+     * 
+     * @param string $code Project code
+     * @param Attachment|Attachment[] $attachments Single attachment or array of attachments
+     * @return string|string[]|null Hash(es) of uploaded attachment(s) or null on failure
+     */
+    public function uploadAttachment(string $code, Attachment|array $attachments): string|array|null;
 
     public function sendResults(string $code, int $runId, array $results): void;
 
