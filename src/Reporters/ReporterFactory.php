@@ -27,8 +27,8 @@ class ReporterFactory
         $hostData = $hostInfo->getHostInfo($framework, $reporterName);
         $logger->debug("Host data: " . json_encode($hostData));
         $state = new StateManager();
-        $reporter = self::createInternalReporter($logger, $config, $state);
-        $fallbackReporter = self::createInternalReporter($logger, $config, $state, true);
+        $reporter = self::createInternalReporter($logger, $config, $state, false, $framework, $reporterName, $hostData);
+        $fallbackReporter = self::createInternalReporter($logger, $config, $state, true, $framework, $reporterName, $hostData);
 
         // Create status mapping utility
         $statusMapping = new StatusMapping($logger);
@@ -37,12 +37,12 @@ class ReporterFactory
         return new CoreReporter($logger, $reporter, $fallbackReporter, $config->getRootSuite(), $statusMapping);
     }
 
-    private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, bool $fallback = false): ?InternalReporterInterface
+    private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, bool $fallback = false, string $framework = "", string $reporterName = "", array $hostData = []): ?InternalReporterInterface
     {
         $mode = $fallback ? $config->getFallback() : $config->getMode();
 
         if ($mode === 'testops') {
-            return self::prepareTestopsReporter($logger, $config, $state);
+            return self::prepareTestopsReporter($logger, $config, $state, $framework, $reporterName, $hostData);
         }
 
         if ($mode === 'report') {
@@ -52,9 +52,9 @@ class ReporterFactory
         return null;
     }
 
-    private static function prepareTestopsReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state): InternalReporterInterface
+    private static function prepareTestopsReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, string $framework = "", string $reporterName = "", array $hostData = []): InternalReporterInterface
     {
-        $client = new ApiClientV2($logger, $config->testops);
+        $client = new ApiClientV2($logger, $config->testops, $framework, $reporterName, $hostData);
         return new TestOpsReporter($client, $config, $state, $logger);
     }
 }
