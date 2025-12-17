@@ -206,7 +206,7 @@ class ApiClientV2 extends ApiClientV1
         if (!empty($hostData['reporter'])) {
             $reporterVersion = $this->normalizeVersion($hostData['reporter']);
             if (!empty($reporterVersion)) {
-                $xClientParts[] = 'reporter_version=v' . $reporterVersion;
+                $xClientParts[] = 'reporter_version=' . $reporterVersion;
             }
         }
         
@@ -217,28 +217,28 @@ class ApiClientV2 extends ApiClientV1
         if (!empty($hostData['framework'])) {
             $frameworkVersion = $this->normalizeVersion($hostData['framework']);
             if (!empty($frameworkVersion)) {
-                $xClientParts[] = 'framework_version=v' . $frameworkVersion;
+                $xClientParts[] = 'framework_version=' . $frameworkVersion;
             }
         }
         
         if (!empty($hostData['apiClientV1'])) {
             $clientV1Version = $this->normalizeVersion($hostData['apiClientV1']);
             if (!empty($clientV1Version)) {
-                $xClientParts[] = 'client_version_v1=v' . $clientV1Version;
+                $xClientParts[] = 'client_version_v1=' . $clientV1Version;
             }
         }
         
         if (!empty($hostData['apiClientV2'])) {
             $clientV2Version = $this->normalizeVersion($hostData['apiClientV2']);
             if (!empty($clientV2Version)) {
-                $xClientParts[] = 'client_version_v2=v' . $clientV2Version;
+                $xClientParts[] = 'client_version_v2=' . $clientV2Version;
             }
         }
         
         if (!empty($hostData['commons'])) {
             $commonsVersion = $this->normalizeVersion($hostData['commons']);
             if (!empty($commonsVersion)) {
-                $xClientParts[] = 'core_version=v' . $commonsVersion;
+                $xClientParts[] = 'core_version=' . $commonsVersion;
             }
         }
 
