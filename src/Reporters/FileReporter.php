@@ -102,7 +102,7 @@ class FileReporter implements InternalReporterInterface
     private function clearDirectory(string $directory): void
     {
         if (!is_dir($directory)) {
-            throw new InvalidArgumentException("Directory $directory does not exist");
+            return;
         }
 
         $files = array_diff(scandir($directory), ['.', '..']);
@@ -119,19 +119,24 @@ class FileReporter implements InternalReporterInterface
         }
     }
 
-    private function convertToJson(object $object): string
+    private function convertToJson(array|object $data): string
     {
         try {
-            return json_encode($object, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+            return json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
-            $this->logger->error('Failed to convert object to JSON: ' . $e->getMessage());
+            $this->logger->error('Failed to convert to JSON: ' . $e->getMessage());
             return '';
         }
     }
 
-    private function saveJsonToFile(string $path, object $object): void
+    private function saveJsonToFile(string $path, array|object $data): void
     {
-        $json = $this->convertToJson($object);
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $json = $this->convertToJson($data);
         $fileHandle = fopen($path, 'c+');
         if ($fileHandle === false) {
             throw new InvalidArgumentException("Unable to open file: $path");
@@ -216,8 +221,10 @@ class FileReporter implements InternalReporterInterface
 
         $this->saveJsonToFile($this->runPath, $run);
 
+        $serializer = new ResultSpecSerializer();
         foreach ($this->results as $result) {
-            $this->saveJsonToFile($this->resultDir . "/" . $result->id . ".json", $result);
+            $specArray = $serializer->toSpecArray($result);
+            $this->saveJsonToFile($this->resultDir . "/" . $result->id . ".json", $specArray);
         }
     }
 }

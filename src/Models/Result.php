@@ -20,6 +20,7 @@ class Result extends BaseModel
     public array $groupParams = [];
     public Relation $relations;
     public string $message = '';
+    public bool $muted = false;
 
     public function __construct()
     {
