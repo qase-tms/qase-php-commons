@@ -75,12 +75,12 @@ class Logger implements LoggerInterface
         $timestamp = date('Y-m-d H:i:s');
         $logEntry = $timestamp . ' ' . $level . ' ' . $message . PHP_EOL;
 
-        // Console output
+        // Console output to STDERR (works with both PHPUnit and Pest output formatters)
         if ($this->consoleEnabled) {
             $color = self::LEVEL_COLORS[$level] ?? self::LEVEL_COLORS['RESET'];
             $reset = self::LEVEL_COLORS['RESET'];
             $formattedMessage = sprintf("%s %s%s %s %s%s\n", $color, self::PREFIX, $timestamp, $level, $message, $reset);
-            echo $formattedMessage;
+            fwrite(STDERR, $formattedMessage);
         }
 
         // File output
