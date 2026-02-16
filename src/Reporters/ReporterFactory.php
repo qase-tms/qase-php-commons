@@ -20,9 +20,10 @@ class ReporterFactory
 {
     public static function create(String $framework = "", String $reporterName = ""): ReporterInterface
     {
-        $configLoader = new ConfigLoader(new Logger(true));
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
         $logger = new Logger($config->getDebug(), $config->getLogging());
+        $logger->debug("Loaded configuration: " . json_encode($config));
         $hostInfo = new HostInfo();
         $hostData = $hostInfo->getHostInfo($framework, $reporterName);
         $logger->debug("Host data: " . json_encode($hostData));

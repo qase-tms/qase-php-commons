@@ -6,23 +6,15 @@ namespace Qase\PhpCommons\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Qase\PhpCommons\Config\ConfigLoader;
-use Qase\PhpCommons\Loggers\Logger;
 
 class PublicReportLinkTest extends TestCase
 {
-    private Logger $logger;
-
-    protected function setUp(): void
-    {
-        $this->logger = new Logger();
-    }
-
     public function testShowPublicReportLinkFromEnvTrue(): void
     {
         // Set environment variable
         putenv('QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=true');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertTrue($config->testops->isShowPublicReportLink());
@@ -36,7 +28,7 @@ class PublicReportLinkTest extends TestCase
         // Set environment variable
         putenv('QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=false');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertFalse($config->testops->isShowPublicReportLink());
@@ -50,7 +42,7 @@ class PublicReportLinkTest extends TestCase
         // Set environment variable with numeric value
         putenv('QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=1');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertTrue($config->testops->isShowPublicReportLink());
@@ -64,7 +56,7 @@ class PublicReportLinkTest extends TestCase
         // Set environment variable with numeric value
         putenv('QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=0');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertFalse($config->testops->isShowPublicReportLink());
@@ -76,7 +68,7 @@ class PublicReportLinkTest extends TestCase
     public function testShowPublicReportLinkDefaultValue(): void
     {
         // Don't set environment variable
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         // Should be false by default
@@ -100,7 +92,7 @@ class PublicReportLinkTest extends TestCase
         file_put_contents($configFilePath, json_encode($configData));
 
         // Load config
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertTrue($config->testops->isShowPublicReportLink());
@@ -126,7 +118,7 @@ class PublicReportLinkTest extends TestCase
         file_put_contents($configFilePath, json_encode($configData));
 
         // Load config
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertFalse($config->testops->isShowPublicReportLink());
@@ -155,7 +147,7 @@ class PublicReportLinkTest extends TestCase
         putenv('QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=true');
 
         // Load config
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         // Environment variable should override file config
@@ -168,7 +160,7 @@ class PublicReportLinkTest extends TestCase
 
     public function testSetShowPublicReportLink(): void
     {
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         // Test setter

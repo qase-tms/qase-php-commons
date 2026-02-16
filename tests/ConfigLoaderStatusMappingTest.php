@@ -6,17 +6,9 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 use Qase\PhpCommons\Config\ConfigLoader;
-use Qase\PhpCommons\Loggers\Logger;
 
 class ConfigLoaderStatusMappingTest extends TestCase
 {
-    private Logger $logger;
-
-    protected function setUp(): void
-    {
-        $this->logger = new Logger(false);
-    }
-
     public function testLoadStatusMappingFromJson(): void
     {
         // Create temporary config file
@@ -40,7 +32,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
         rename($tempFile, $configPath);
         
         try {
-            $configLoader = new ConfigLoader($this->logger);
+            $configLoader = new ConfigLoader();
             $config = $configLoader->getConfig();
             
             $expectedMapping = [
@@ -63,7 +55,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
         putenv('QASE_STATUS_MAPPING=invalid=failed,skipped=passed');
         
         try {
-            $configLoader = new ConfigLoader($this->logger);
+            $configLoader = new ConfigLoader();
             $config = $configLoader->getConfig();
             
             $expectedMapping = [
@@ -98,7 +90,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
         putenv('QASE_STATUS_MAPPING=invalid=failed,skipped=passed');
         
         try {
-            $configLoader = new ConfigLoader($this->logger);
+            $configLoader = new ConfigLoader();
             $config = $configLoader->getConfig();
             
             // Environment should override JSON
@@ -117,7 +109,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
 
     public function testEmptyStatusMapping(): void
     {
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
         
         $this->assertEmpty($config->getStatusMapping());
@@ -147,7 +139,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
         rename($tempFile, $configPath);
         
         try {
-            $configLoader = new ConfigLoader($this->logger);
+            $configLoader = new ConfigLoader();
             $config = $configLoader->getConfig();
             
             // Only valid mappings should be kept
@@ -167,7 +159,7 @@ class ConfigLoaderStatusMappingTest extends TestCase
         putenv('QASE_STATUS_MAPPING=invalid=failed,unknown=passed,skipped=unknown');
         
         try {
-            $configLoader = new ConfigLoader($this->logger);
+            $configLoader = new ConfigLoader();
             $config = $configLoader->getConfig();
             
             // Only valid mappings should be kept

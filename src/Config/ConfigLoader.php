@@ -2,7 +2,6 @@
 
 namespace Qase\PhpCommons\Config;
 
-use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Config\QaseConfig;
 use Qase\PhpCommons\Utils\StatusMapping;
 use RuntimeException;
@@ -13,12 +12,10 @@ class ConfigLoader
     private string $filePath = '/qase.config.json';
     private ?string $tempExternalLinkType = null;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct()
     {
         $this->config = $this->loadFromJsonFile();
         $this->overrideWithEnvVariables();
-
-        $logger->debug("Loaded configuration: " . json_encode($this->config));
 
         $this->validate();
     }
