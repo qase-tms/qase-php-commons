@@ -6,24 +6,16 @@ namespace Qase\PhpCommons\Tests;
 
 use PHPUnit\Framework\TestCase;
 use Qase\PhpCommons\Config\ConfigLoader;
-use Qase\PhpCommons\Loggers\Logger;
 
 class ConfigLoaderTest extends TestCase
 {
-    private Logger $logger;
-
-    protected function setUp(): void
-    {
-        $this->logger = new Logger();
-    }
-
     public function testConfigurationValuesFromEnv(): void
     {
         // Set environment variables
         putenv('QASE_TESTOPS_CONFIGURATIONS_VALUES=browser=chrome,version=latest,environment=staging');
         putenv('QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=true');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $this->assertTrue($config->testops->configurations->isCreateIfNotExists());
@@ -50,7 +42,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variables with spaces
         putenv('QASE_TESTOPS_CONFIGURATIONS_VALUES=browser=chrome, version=latest , environment=staging');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $values = $config->testops->configurations->getValues();
@@ -74,7 +66,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variables with invalid format
         putenv('QASE_TESTOPS_CONFIGURATIONS_VALUES=invalid_format,another_invalid');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $values = $config->testops->configurations->getValues();
@@ -89,7 +81,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variables with mixed valid and invalid format
         putenv('QASE_TESTOPS_CONFIGURATIONS_VALUES=invalid,browser=chrome,another_invalid,version=latest');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $values = $config->testops->configurations->getValues();
@@ -110,7 +102,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable for status filter
         putenv('QASE_TESTOPS_STATUS_FILTER=skipped,blocked,untested');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $statusFilter = $config->testops->getStatusFilter();
@@ -128,7 +120,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable with spaces
         putenv('QASE_TESTOPS_STATUS_FILTER=skipped, blocked , untested');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $statusFilter = $config->testops->getStatusFilter();
@@ -146,7 +138,7 @@ class ConfigLoaderTest extends TestCase
         // Set empty environment variable
         putenv('QASE_TESTOPS_STATUS_FILTER=');
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $statusFilter = $config->testops->getStatusFilter();
@@ -164,7 +156,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable with spaces
         putenv("QASE_DEBUG=$expected");
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $debug = $config->getDebug();
@@ -182,7 +174,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable with spaces
         putenv("QASE_TESTOPS_DEFECT=$expected");
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $isDefect = $config->testops->isDefect();
@@ -200,7 +192,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable with spaces
         putenv("QASE_TESTOPS_RUN_COMPLETE=$expected");
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $isComplete = $config->testops->run->isComplete();
@@ -218,7 +210,7 @@ class ConfigLoaderTest extends TestCase
         // Set environment variable with spaces
         putenv("QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS=$expected");
 
-        $configLoader = new ConfigLoader($this->logger);
+        $configLoader = new ConfigLoader();
         $config = $configLoader->getConfig();
 
         $isCreateIfNotExists = $config->testops->configurations->isCreateIfNotExists();
