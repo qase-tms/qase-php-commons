@@ -40,7 +40,7 @@
   "scripts": {
     "test": "phpunit"
   },
-  "version": "2.1.13",
+  "version": "2.1.14",
   "config": {
     "platform": {
       "php": "8.0"
