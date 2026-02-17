@@ -27,8 +27,8 @@ class Logger implements LoggerInterface
         $this->logFilePath = getcwd() . '/logs/log_' . date('Y-m-d') . '.log';
 
         // Set default logging configuration
-        $this->consoleEnabled = false;
-        $this->fileEnabled = false;
+        $this->consoleEnabled = true;
+        $this->fileEnabled = true;
 
         // Override with config if provided
         if ($loggingConfig !== null) {
