@@ -244,6 +244,15 @@ class TestOpsReporterTest extends TestCase
         $reporter->sendResults();
     }
 
+    public function testNoResetConfigurationCacheMethod(): void
+    {
+        $reflection = new ReflectionClass(TestOpsReporter::class);
+        $this->assertFalse(
+            $reflection->hasMethod('resetConfigurationCache'),
+            'TestOpsReporter should not have the unused resetConfigurationCache method'
+        );
+    }
+
     private function getPrivateProperty(object $object, string $propertyName)
     {
         $reflection = new ReflectionClass($object);

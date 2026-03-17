@@ -220,6 +220,36 @@ class ConfigLoaderTest extends TestCase
         putenv('QASE_TESTOPS_CONFIGURATIONS_CREATE_IF_NOT_EXISTS');
     }
 
+    public function testExternalLinkFromEnvBothVarsSet(): void
+    {
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_URL=https://jira.example.com/browse/PROJ-123');
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE=jiraCloud');
+
+        $configLoader = new ConfigLoader();
+        $config = $configLoader->getConfig();
+
+        $externalLink = $config->testops->run->getExternalLink();
+        $this->assertNotNull($externalLink, 'External link should be created when both type and URL env vars are set');
+        $this->assertEquals('jiraCloud', $externalLink->getType());
+        $this->assertEquals('https://jira.example.com/browse/PROJ-123', $externalLink->getLink());
+
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_URL');
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE');
+    }
+
+    public function testExternalLinkFromEnvOnlyTypeNoUrl(): void
+    {
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE=jiraCloud');
+
+        $configLoader = new ConfigLoader();
+        $config = $configLoader->getConfig();
+
+        $externalLink = $config->testops->run->getExternalLink();
+        $this->assertNull($externalLink, 'External link should be null when only type is set without URL');
+
+        putenv('QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE');
+    }
+
     public static function booleanProvider(): array
     {
         return [
@@ -227,4 +257,4 @@ class ConfigLoaderTest extends TestCase
             [false],
         ];
     }
-} 
+}
