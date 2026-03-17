@@ -153,14 +153,13 @@ class CoreReporter implements ReporterInterface
         // Apply mapping to step statuses
         if (isset($result->steps) && is_array($result->steps)) {
             foreach ($result->steps as $step) {
-                if (isset($step->status)) {
-                    $originalStatus = $step->status;
-                    $mappedStatus = $this->statusMapping->mapStatus($originalStatus);
-                    
-                    if ($originalStatus !== $mappedStatus) {
-                        $step->status = $mappedStatus;
-                        $this->logger->info("Status mapping applied to step '{$step->title}': '$originalStatus' -> '$mappedStatus'");
-                    }
+                $originalStatus = $step->execution->getStatus();
+                $mappedStatus = $this->statusMapping->mapStatus($originalStatus);
+
+                if ($originalStatus !== $mappedStatus) {
+                    $step->execution->setStatus($mappedStatus);
+                    $stepTitle = $step->data->getAction() ?? '(unnamed)';
+                    $this->logger->info("Status mapping applied to step '{$stepTitle}': '$originalStatus' -> '$mappedStatus'");
                 }
             }
         }

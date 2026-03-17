@@ -167,7 +167,6 @@ class CoreReporterTest extends TestCase
         // Use reflection to call private runFallbackReporter directly
         $reflection = new \ReflectionClass($coreReporter);
         $method = $reflection->getMethod('runFallbackReporter');
-        $method->setAccessible(true);
 
         // Fallback should start even though primary reporter is null
         $this->fallbackReporterMock->expects($this->once())
@@ -195,7 +194,6 @@ class CoreReporterTest extends TestCase
 
         $reflection = new \ReflectionClass($coreReporter);
         $method = $reflection->getMethod('runFallbackReporter');
-        $method->setAccessible(true);
 
         $this->fallbackReporterMock->expects($this->once())
             ->method('startRun');
@@ -204,12 +202,10 @@ class CoreReporterTest extends TestCase
 
         // Verify fallback is now the active reporter
         $reporterProp = $reflection->getProperty('reporter');
-        $reporterProp->setAccessible(true);
         $this->assertSame($this->fallbackReporterMock, $reporterProp->getValue($coreReporter));
 
         // Verify fallbackReporter is now null (consumed)
         $fallbackProp = $reflection->getProperty('fallbackReporter');
-        $fallbackProp->setAccessible(true);
         $this->assertNull($fallbackProp->getValue($coreReporter));
     }
 
