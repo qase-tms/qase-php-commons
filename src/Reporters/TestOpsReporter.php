@@ -216,11 +216,6 @@ class TestOpsReporter implements InternalReporterInterface
         return null;
     }
 
-    private function resetConfigurationCache(): void
-    {
-        $this->cachedConfigurationGroups = null;
-    }
-
     private function getEnvironmentId(?string $name): ?int
     {
         return $name ? $this->client->getEnvironment($this->config->testops->getProject(), $name) : null;

@@ -11,6 +11,7 @@ class ConfigLoader
     private QaseConfig $config;
     private string $filePath = '/qase.config.json';
     private ?string $tempExternalLinkType = null;
+    private ?string $tempExternalLinkUrl = null;
 
     public function __construct()
     {
@@ -201,6 +202,7 @@ class ConfigLoader
                     break;
             }
         }
+        $this->finalizeExternalLink();
     }
 
     /**
@@ -285,20 +287,29 @@ class ConfigLoader
 
         $url = trim($value);
         $currentExternalLink = $this->config->testops->run->getExternalLink();
-        
+
         if ($currentExternalLink) {
             $currentExternalLink->setLink($url);
         } else {
-            // Check if we have type from previous environment variable
-            if (isset($this->tempExternalLinkType)) {
-                $this->config->testops->run->setExternalLink(
-                    new \Qase\PhpCommons\Models\Config\TestOpsExternalLinkType(
-                        $this->tempExternalLinkType,
-                        $url
-                    )
-                );
-                unset($this->tempExternalLinkType);
-            }
+            $this->tempExternalLinkUrl = $url;
+        }
+    }
+
+    /**
+     * Finalize external link after all env vars have been processed.
+     * This ensures the link is created regardless of env var iteration order.
+     */
+    private function finalizeExternalLink(): void
+    {
+        if ($this->tempExternalLinkType !== null && $this->tempExternalLinkUrl !== null) {
+            $this->config->testops->run->setExternalLink(
+                new \Qase\PhpCommons\Models\Config\TestOpsExternalLinkType(
+                    $this->tempExternalLinkType,
+                    $this->tempExternalLinkUrl
+                )
+            );
+            $this->tempExternalLinkType = null;
+            $this->tempExternalLinkUrl = null;
         }
     }
 

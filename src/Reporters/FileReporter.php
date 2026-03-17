@@ -43,7 +43,7 @@ class FileReporter implements InternalReporterInterface
         $this->state->startRun(function () {
             $this->startTime = time();
             self::clearDirectory($this->config->connection->getPath());
-            $this->prepare_report_folder();
+            $this->prepareReportFolder();
 
             $run = new Run("Test run", $this->startTime, time());
             $this->saveJsonToFile($this->runPath, $run);
@@ -86,7 +86,7 @@ class FileReporter implements InternalReporterInterface
         $this->results = $results;
     }
 
-    private function prepare_report_folder(): void
+    private function prepareReportFolder(): void
     {
         $this->checkAndCreateDirectory($this->resultDir);
         $this->checkAndCreateDirectory($this->attachmentDir);
@@ -95,7 +95,7 @@ class FileReporter implements InternalReporterInterface
     private function checkAndCreateDirectory(string $path): void
     {
         if (!is_dir($path)) {
-            mkdir($path, 0777, true);
+            mkdir($path, 0755, true);
         }
     }
 
@@ -133,7 +133,7 @@ class FileReporter implements InternalReporterInterface
     {
         $dir = dirname($path);
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            mkdir($dir, 0755, true);
         }
 
         $json = $this->convertToJson($data);

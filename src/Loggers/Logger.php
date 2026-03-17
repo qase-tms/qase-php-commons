@@ -42,7 +42,7 @@ class Logger implements LoggerInterface
 
         // Create logs directory if file logging is enabled
         if ($this->fileEnabled && !is_dir(getcwd() . '/logs')) {
-            mkdir(getcwd() . '/logs', 0777, true);
+            mkdir(getcwd() . '/logs', 0755, true);
         }
     }
 
