@@ -10,9 +10,6 @@ use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Interfaces\ReporterInterface;
 use Qase\PhpCommons\Utils\StatusMapping;
 
-// Disable deprecated errors from Api clients
-error_reporting(E_ALL & ~E_DEPRECATED);
-
 class CoreReporter implements ReporterInterface
 {
     /** @var InternalReporterInterface|null */
@@ -47,11 +44,14 @@ class CoreReporter implements ReporterInterface
 
         $this->logger->info('Starting test run');
 
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
             $this->reporter->startRun();
         } catch (Exception $e) {
             $this->logger->error('Failed to start reporter: ' . $e->getMessage());
             $this->runFallbackReporter();
+        } finally {
+            error_reporting($previousLevel);
         }
     }
 
@@ -63,11 +63,14 @@ class CoreReporter implements ReporterInterface
 
         $this->logger->info('Completing test run');
 
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
             $this->reporter->completeRun();
         } catch (Exception $e) {
             $this->logger->error('Failed to complete reporter: ' . $e->getMessage());
             $this->runFallbackReporter();
+        } finally {
+            error_reporting($previousLevel);
         }
     }
 
@@ -79,6 +82,7 @@ class CoreReporter implements ReporterInterface
 
         $this->logger->debug("Adding result: " . json_encode($result));
 
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
             // Apply status mapping before processing
             $this->applyStatusMapping($result);
@@ -96,6 +100,8 @@ class CoreReporter implements ReporterInterface
         } catch (Exception $e) {
             $this->logger->error('Failed to add result to reporter: ' . $e->getMessage());
             $this->runFallbackReporter();
+        } finally {
+            error_reporting($previousLevel);
         }
     }
 
@@ -105,15 +111,20 @@ class CoreReporter implements ReporterInterface
             return;
         }
 
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
-            $results = $this->reporter->getResults();
+            if ($this->reporter !== null) {
+                $results = $this->reporter->getResults();
+                $this->fallbackReporter->setResults($results);
+            }
             $this->fallbackReporter->startRun();
-            $this->fallbackReporter->setResults($results);
             $this->reporter = $this->fallbackReporter;
             $this->fallbackReporter = null;
         } catch (Exception $e) {
             $this->logger->error('Failed to run fallback reporter: ' . $e->getMessage());
             $this->reporter = null;
+        } finally {
+            error_reporting($previousLevel);
         }
     }
 
@@ -161,11 +172,14 @@ class CoreReporter implements ReporterInterface
             return;
         }
 
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
             $this->reporter->sendResults();
         } catch (Exception $e) {
             $this->logger->error('Failed to send results: ' . $e->getMessage());
             $this->runFallbackReporter();
+        } finally {
+            error_reporting($previousLevel);
         }
     }
 }
