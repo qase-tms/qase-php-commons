@@ -58,7 +58,9 @@ class ApiClientV2 extends ApiClientV1
             }
             $model->setResults($convertedResults);
 
-            $this->logger->debug("Send results to project: " . json_encode($model));
+            if ($this->logger->isDebug()) {
+                $this->logger->debug("Send results to project: " . json_encode($model));
+            }
 
             $resultsApi = new ResultsApi($this->clientV2, $this->clientV2Config);
             $resultsApi->createResultsV2($code, $runId, $model);
@@ -101,7 +103,9 @@ class ApiClientV2 extends ApiClientV1
         }
         $model->setSteps($steps);
 
-        $this->logger->debug("Convert result to model: " . json_encode($model));
+        if ($this->logger->isDebug()) {
+            $this->logger->debug("Convert result to model: " . json_encode($model));
+        }
 
         return $model;
     }

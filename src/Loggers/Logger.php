@@ -70,6 +70,11 @@ class Logger implements LoggerInterface
         $this->writeLog($message, 'WARNING');
     }
 
+    public function isDebug(): bool
+    {
+        return $this->debug;
+    }
+
     private function writeLog(string $message, string $level): void
     {
         $timestamp = date('Y-m-d H:i:s');

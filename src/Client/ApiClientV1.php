@@ -525,7 +525,9 @@ class ApiClientV1 implements ClientInterface
             $runExternalIssues->setType($apiType);
             $runExternalIssues->setLinks($apiLinks);
 
-            $this->logger->debug('External issue update request: ' . json_encode($runExternalIssues));
+            if ($this->logger->isDebug()) {
+                $this->logger->debug('External issue update request: ' . json_encode($runExternalIssues));
+            }
 
             // Use the API client
             $runApi = new RunsApi($this->client, $this->clientConfig);
