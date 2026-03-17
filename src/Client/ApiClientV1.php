@@ -44,7 +44,7 @@ class ApiClientV1 implements ClientInterface
             ->setApiKey('Token', $this->config->api->getToken());
 
         $host = $this->config->api->getHost();
-        if ($host == 'qase.io') {
+        if ($host === 'qase.io') {
             $this->clientConfig->setHost('https://api.qase.io/v1');
             $this->appUrl = 'https://app.qase.io';
         } else {
@@ -62,7 +62,7 @@ class ApiClientV1 implements ClientInterface
             $projectsApi = new ProjectsApi($this->client, $this->clientConfig);
             $project = $projectsApi->getProject($code);
 
-            $result = $project->getStatus() == 200;
+            $result = $project->getStatus() === 200;
 
             if (!$result) {
                 $this->logger->debug('Project not found: ' . $code);
@@ -86,7 +86,7 @@ class ApiClientV1 implements ClientInterface
             $envs = $envApi->getEnvironments($code, null, $envName, 100);
 
             foreach ($envs->getResult()->getEntities() as $env) {
-                if ($env->getSlug() == $envName) {
+                if ($env->getSlug() === $envName) {
                     $this->logger->debug('Environment found: ' . $envName);
                     return $env->getId();
                 }
@@ -169,7 +169,7 @@ class ApiClientV1 implements ClientInterface
             $runApi = new RunsApi($this->client, $this->clientConfig);
             $run = $runApi->getRun($code, $runId);
 
-            $result = $run->getStatus() == 200;
+            $result = $run->getStatus() === 200;
 
             if (!$result) {
                 $this->logger->debug('Test run not found: ' . $runId);

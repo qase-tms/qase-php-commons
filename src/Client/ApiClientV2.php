@@ -38,7 +38,7 @@ class ApiClientV2 extends ApiClientV1
             ->setApiKey('Token', $this->config->api->getToken());
 
         $host = $this->config->api->getHost();
-        if ($host == 'qase.io') {
+        if ($host === 'qase.io') {
             $this->clientV2Config->setHost('https://api.qase.io/v2');
         } else {
             $this->clientV2Config->setHost('https://api-' . $host . '/v2');
@@ -59,7 +59,7 @@ class ApiClientV2 extends ApiClientV1
             $model = new CreateResultsRequestV2();
             $convertedResults = [];
             foreach ($results as $result) {
-                $convertedResults[] = $this->covertToModel($result);
+                $convertedResults[] = $this->convertToModel($result);
             }
             $model->setResults($convertedResults);
 
@@ -73,7 +73,7 @@ class ApiClientV2 extends ApiClientV1
         }
     }
 
-    private function covertToModel(Result $result): ResultCreate
+    private function convertToModel(Result $result): ResultCreate
     {
         $model = new ResultCreate();
         $model->setTitle($result->title);
@@ -126,8 +126,8 @@ class ApiClientV2 extends ApiClientV1
         $model->setExecution($executionModel);
 
         $steps = [];
-        foreach ($step->steps as $step) {
-            $steps[] = $this->convertStep($step);
+        foreach ($step->steps as $childStep) {
+            $steps[] = $this->convertStep($childStep);
         }
         $model->setSteps($steps);
 
