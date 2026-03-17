@@ -24,8 +24,16 @@ class StateManager implements StateInterface
     public function startRun(callable $createRun): int
     {
         $file = fopen($this->filename, 'c+');
+        if ($file === false) {
+            throw new Exception("Cannot open file.");
+        }
 
-        if (flock($file, LOCK_EX)) {
+        if (!flock($file, LOCK_EX)) {
+            fclose($file);
+            throw new Exception("Can not lock file.");
+        }
+
+        try {
             $fileContents = stream_get_contents($file);
             $data = json_decode($fileContents, true);
 
@@ -46,13 +54,12 @@ class StateManager implements StateInterface
             rewind($file);
             fwrite($file, json_encode($data, JSON_PRETTY_PRINT));
             fflush($file);
-            flock($file, LOCK_UN);
-        } else {
-            throw new Exception("Can not lock file.");
-        }
 
-        fclose($file);
-        return $runId;
+            return $runId;
+        } finally {
+            flock($file, LOCK_UN);
+            fclose($file);
+        }
     }
 
     /**
@@ -61,7 +68,18 @@ class StateManager implements StateInterface
     public function completeRun(callable $completeRun): void
     {
         $file = fopen($this->filename, 'c+');
-        if (flock($file, LOCK_EX)) {
+        if ($file === false) {
+            throw new Exception("Cannot open file.");
+        }
+
+        if (!flock($file, LOCK_EX)) {
+            fclose($file);
+            throw new Exception("Can not lock file.");
+        }
+
+        $shouldComplete = false;
+
+        try {
             $fileContents = stream_get_contents($file);
             $data = json_decode($fileContents, true);
 
@@ -72,22 +90,26 @@ class StateManager implements StateInterface
             if (!empty($data['runId']) && $data['count'] > 0) {
                 $data['count'] -= 1;
                 if ($data['count'] === 0) {
-                    $completeRun();
-                    fclose($file);
-                    unlink($this->filename);
-                    return;
+                    $shouldComplete = true;
                 }
             }
 
-            ftruncate($file, 0);
-            rewind($file);
-            fwrite($file, json_encode($data, JSON_PRETTY_PRINT));
-            fflush($file);
+            if (!$shouldComplete) {
+                ftruncate($file, 0);
+                rewind($file);
+                fwrite($file, json_encode($data, JSON_PRETTY_PRINT));
+                fflush($file);
+            }
+        } finally {
             flock($file, LOCK_UN);
-        } else {
-            throw new Exception("Can not lock file.");
+            fclose($file);
         }
 
-        fclose($file);
+        if ($shouldComplete) {
+            $completeRun();
+            if (file_exists($this->filename)) {
+                unlink($this->filename);
+            }
+        }
     }
 }
