@@ -43,15 +43,27 @@ class ApiClientV1 implements ClientInterface
         $this->clientConfig = Configuration::getDefaultConfiguration()
             ->setApiKey('Token', $this->config->api->getToken());
 
+        $this->clientConfig->setHost($this->resolveApiHost('v1'));
+        $this->appUrl = $this->resolveAppUrl();
+        $this->client = new Client();
+    }
+
+    protected function resolveApiHost(string $version): string
+    {
         $host = $this->config->api->getHost();
         if ($host === 'qase.io') {
-            $this->clientConfig->setHost('https://api.qase.io/v1');
-            $this->appUrl = 'https://app.qase.io';
-        } else {
-            $this->clientConfig->setHost('https://api-' . $host . '/v1');
-            $this->appUrl = 'https://' . $host;
+            return 'https://api.qase.io/' . $version;
         }
-        $this->client = new Client();
+        return 'https://api-' . $host . '/' . $version;
+    }
+
+    protected function resolveAppUrl(): string
+    {
+        $host = $this->config->api->getHost();
+        if ($host === 'qase.io') {
+            return 'https://app.qase.io';
+        }
+        return 'https://' . $host;
     }
 
     public function isProjectExist(string $code): bool

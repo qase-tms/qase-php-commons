@@ -37,12 +37,7 @@ class ApiClientV2 extends ApiClientV1
         $this->clientV2Config = Configuration::getDefaultConfiguration()
             ->setApiKey('Token', $this->config->api->getToken());
 
-        $host = $this->config->api->getHost();
-        if ($host === 'qase.io') {
-            $this->clientV2Config->setHost('https://api.qase.io/v2');
-        } else {
-            $this->clientV2Config->setHost('https://api-' . $host . '/v2');
-        }
+        $this->clientV2Config->setHost($this->resolveApiHost('v2'));
 
         // Create GuzzleHttp Client with default headers
         $headers = $this->buildHeaders($framework, $reporterName, $hostData);
