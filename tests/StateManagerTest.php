@@ -17,6 +17,7 @@ class StateManagerTest extends TestCase
         $this->stateManager = new StateManager();
         $reflection = new \ReflectionClass($this->stateManager);
         $prop = $reflection->getProperty('filename');
+        $prop->setAccessible(true);
         $prop->setValue($this->stateManager, $this->tempFile);
     }
 
