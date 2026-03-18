@@ -150,4 +150,84 @@ class CoreReporterTest extends TestCase
         // Trigger fallback
         $coreReporter->startRun();
     }
+
+    public function testRunFallbackWhenPrimaryReporterIsNull(): void
+    {
+        // BUG-03: When reporter is null, runFallbackReporter() should not throw NPE
+        // on $this->reporter->getResults()
+        $statusMapping = new StatusMapping($this->loggerMock);
+        $coreReporter = new CoreReporter(
+            $this->loggerMock,
+            null, // primary reporter is null
+            $this->fallbackReporterMock,
+            null,
+            $statusMapping
+        );
+
+        // Use reflection to call private runFallbackReporter directly
+        $reflection = new \ReflectionClass($coreReporter);
+        $method = $reflection->getMethod('runFallbackReporter');
+        $method->setAccessible(true);
+
+        // Fallback should start even though primary reporter is null
+        $this->fallbackReporterMock->expects($this->once())
+            ->method('startRun');
+
+        // setResults should NOT be called since there's no reporter to get results from
+        $this->fallbackReporterMock->expects($this->never())
+            ->method('setResults');
+
+        // Should not throw
+        $method->invoke($coreReporter);
+    }
+
+    public function testRunFallbackReporterWithNullReporterStillActivatesFallback(): void
+    {
+        // BUG-03: After runFallbackReporter with null primary, fallback becomes active reporter
+        $statusMapping = new StatusMapping($this->loggerMock);
+        $coreReporter = new CoreReporter(
+            $this->loggerMock,
+            null, // primary reporter is null
+            $this->fallbackReporterMock,
+            null,
+            $statusMapping
+        );
+
+        $reflection = new \ReflectionClass($coreReporter);
+        $method = $reflection->getMethod('runFallbackReporter');
+        $method->setAccessible(true);
+
+        $this->fallbackReporterMock->expects($this->once())
+            ->method('startRun');
+
+        $method->invoke($coreReporter);
+
+        // Verify fallback is now the active reporter
+        $reporterProp = $reflection->getProperty('reporter');
+        $reporterProp->setAccessible(true);
+        $this->assertSame($this->fallbackReporterMock, $reporterProp->getValue($coreReporter));
+
+        // Verify fallbackReporter is now null (consumed)
+        $fallbackProp = $reflection->getProperty('fallbackReporter');
+        $fallbackProp->setAccessible(true);
+        $this->assertNull($fallbackProp->getValue($coreReporter));
+    }
+
+    public function testErrorReportingNotGloballySuppressed(): void
+    {
+        // REF-04: CoreReporter.php should NOT contain a file-level error_reporting() call.
+        // Verify by reading the source and checking no top-level error_reporting() exists.
+        $source = file_get_contents(__DIR__ . '/../src/Reporters/CoreReporter.php');
+
+        // Strip method bodies — only check top-level (outside functions) for error_reporting
+        // Simple approach: ensure no error_reporting call appears before the class declaration
+        $classPos = strpos($source, 'class CoreReporter');
+        $preamble = substr($source, 0, $classPos);
+
+        $this->assertStringNotContainsString(
+            'error_reporting(',
+            $preamble,
+            'CoreReporter.php should not call error_reporting() at file scope'
+        );
+    }
 }

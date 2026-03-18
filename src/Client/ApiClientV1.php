@@ -43,62 +43,84 @@ class ApiClientV1 implements ClientInterface
         $this->clientConfig = Configuration::getDefaultConfiguration()
             ->setApiKey('Token', $this->config->api->getToken());
 
-        $host = $this->config->api->getHost();
-        if ($host == 'qase.io') {
-            $this->clientConfig->setHost('https://api.qase.io/v1');
-            $this->appUrl = 'https://app.qase.io';
-        } else {
-            $this->clientConfig->setHost('https://api-' . $host . '/v1');
-            $this->appUrl = 'https://' . $host;
-        }
+        $this->clientConfig->setHost($this->resolveApiHost('v1'));
+        $this->appUrl = $this->resolveAppUrl();
         $this->client = new Client();
+    }
+
+    protected function resolveApiHost(string $version): string
+    {
+        $host = $this->config->api->getHost();
+        if ($host === 'qase.io') {
+            return 'https://api.qase.io/' . $version;
+        }
+        return 'https://api-' . $host . '/' . $version;
+    }
+
+    protected function resolveAppUrl(): string
+    {
+        $host = $this->config->api->getHost();
+        if ($host === 'qase.io') {
+            return 'https://app.qase.io';
+        }
+        return 'https://' . $host;
+    }
+
+    /**
+     * Execute an API call with standardized error handling.
+     *
+     * @template T
+     * @param string $action Human-readable description for error messages
+     * @param callable(): T $callback The API call to execute
+     * @param mixed $default Default value to return on failure
+     * @param string $logLevel Log level for error messages ('error' or 'warning')
+     * @return mixed
+     */
+    private function tryApiCall(string $action, callable $callback, mixed $default = null, string $logLevel = 'error'): mixed
+    {
+        try {
+            return $callback();
+        } catch (Exception $e) {
+            $message = "Failed to {$action}: " . $e->getMessage();
+            match ($logLevel) {
+                'warning' => $this->logger->warning($message),
+                default => $this->logger->error($message),
+            };
+            return $default;
+        }
     }
 
     public function isProjectExist(string $code): bool
     {
-        try {
+        return $this->tryApiCall('check project exist', function () use ($code) {
             $this->logger->debug('Check project exist: ' . $code);
-
             $projectsApi = new ProjectsApi($this->client, $this->clientConfig);
             $project = $projectsApi->getProject($code);
-
-            $result = $project->getStatus() == 200;
-
+            $result = $project->getStatus() === 200;
             if (!$result) {
                 $this->logger->debug('Project not found: ' . $code);
                 return false;
             }
-
             $this->logger->debug('Project found: ' . $code);
             return true;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to check project exist: ' . $e->getMessage());
-            return false;
-        }
+        }, false);
     }
 
     public function getEnvironment(string $code, string $envName): ?int
     {
-        try {
+        return $this->tryApiCall('get environment', function () use ($code, $envName) {
             $this->logger->debug('Get environment: ' . $envName);
-
             $envApi = new EnvironmentsApi($this->client, $this->clientConfig);
             $envs = $envApi->getEnvironments($code, null, $envName, 100);
-
             foreach ($envs->getResult()->getEntities() as $env) {
-                if ($env->getSlug() == $envName) {
+                if ($env->getSlug() === $envName) {
                     $this->logger->debug('Environment found: ' . $envName);
                     return $env->getId();
                 }
             }
-
             $this->logger->debug('Environment not found: ' . $envName);
-
             return null;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to get environment: ' . $e->getMessage());
-            return null;
-        }
+        });
     }
 
     /**
@@ -149,39 +171,28 @@ class ApiClientV1 implements ClientInterface
 
     public function completeTestRun(string $code, int $runId): void
     {
-        try {
+        $this->tryApiCall('complete test run', function () use ($code, $runId) {
             $this->logger->debug('Complete test run: ' . $runId);
-
             $runApi = new RunsApi($this->client, $this->clientConfig);
             $runApi->completeRun($code, $runId);
-
             $this->logger->info('Test run link: ' . $this->appUrl . '/run/' . $code . '/dashboard/' . $runId);
-        } catch (Exception $e) {
-            $this->logger->error('Failed to complete test run: ' . $e->getMessage());
-        }
+        });
     }
 
     public function isTestRunExist(string $code, int $runId): bool
     {
-        try {
+        return $this->tryApiCall('check test run exist', function () use ($code, $runId) {
             $this->logger->debug('Check test run exist: ' . $runId);
-
             $runApi = new RunsApi($this->client, $this->clientConfig);
             $run = $runApi->getRun($code, $runId);
-
-            $result = $run->getStatus() == 200;
-
+            $result = $run->getStatus() === 200;
             if (!$result) {
                 $this->logger->debug('Test run not found: ' . $runId);
                 return false;
             }
-
             $this->logger->debug('Test run found: ' . $runId);
             return true;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to check test run exist: ' . $e->getMessage());
-            return false;
-        }
+        }, false);
     }
 
     /**
@@ -211,15 +222,17 @@ class ApiClientV1 implements ClientInterface
             $this->logger->debug('Upload ' . count($attachmentsArray) . ' attachment(s)');
 
             // Filter and validate individual file constraints (skip invalid files)
-            $validAttachments = $this->filterValidAttachments($attachmentsArray);
-            
+            $filtered = $this->filterValidAttachments($attachmentsArray);
+            $validAttachments = $filtered['attachments'];
+            $sizes = $filtered['sizes'];
+
             if (empty($validAttachments)) {
                 $this->logger->warning('No valid attachments to upload after filtering');
                 return is_array($attachments) ? [] : null;
             }
 
             // Split into batches
-            $batches = $this->splitIntoBatches($validAttachments);
+            $batches = $this->splitIntoBatches($validAttachments, $sizes);
             $this->logger->debug('Split into ' . count($batches) . ' batch(es)');
 
             $allHashes = [];
@@ -293,21 +306,21 @@ class ApiClientV1 implements ClientInterface
     }
 
     /**
-     * Filter attachments and return only valid ones, logging errors for invalid files
-     * 
+     * Filter attachments and return only valid ones with their pre-computed sizes
+     *
      * @param Attachment[] $attachments
-     * @return Attachment[] Array of valid attachments
+     * @return array{attachments: Attachment[], sizes: int[]}
      */
     private function filterValidAttachments(array $attachments): array
     {
         $maxFileSize = 32 * 1024 * 1024; // 32 MB
         $validAttachments = [];
+        $sizes = [];
 
         foreach ($attachments as $index => $attachment) {
             $fileSize = 0;
             $fileName = $attachment->title ?? $attachment->path ?? "attachment at index {$index}";
 
-            // Check if file has path or content
             if ($attachment->path) {
                 if (!file_exists($attachment->path)) {
                     $this->logger->warning("Skipping attachment '{$fileName}': file not found: {$attachment->path}");
@@ -321,7 +334,6 @@ class ApiClientV1 implements ClientInterface
                 continue;
             }
 
-            // Check file size
             if ($fileSize > $maxFileSize) {
                 $fileSizeMB = round($fileSize / 1024 / 1024, 2);
                 $this->logger->warning("Skipping attachment '{$fileName}': file size {$fileSizeMB} MB exceeds maximum of 32 MB per file");
@@ -329,6 +341,7 @@ class ApiClientV1 implements ClientInterface
             }
 
             $validAttachments[] = $attachment;
+            $sizes[] = $fileSize;
         }
 
         $skippedCount = count($attachments) - count($validAttachments);
@@ -336,16 +349,17 @@ class ApiClientV1 implements ClientInterface
             $this->logger->info("Filtered out {$skippedCount} invalid attachment(s), proceeding with " . count($validAttachments) . " valid attachment(s)");
         }
 
-        return $validAttachments;
+        return ['attachments' => $validAttachments, 'sizes' => $sizes];
     }
 
     /**
      * Split attachments into batches respecting API constraints
-     * 
+     *
      * @param Attachment[] $attachments
+     * @param int[] $sizes Pre-computed file sizes (parallel array, same indices as $attachments)
      * @return Attachment[][] Array of batches
      */
-    private function splitIntoBatches(array $attachments): array
+    private function splitIntoBatches(array $attachments, array $sizes): array
     {
         $maxFilesPerBatch = 20;
         $maxSizePerBatch = 128 * 1024 * 1024; // 128 MB
@@ -354,29 +368,13 @@ class ApiClientV1 implements ClientInterface
         $currentBatch = [];
         $currentBatchSize = 0;
 
-        foreach ($attachments as $attachment) {
-            // Get file size (files should be validated already, but add safety check)
-            $fileSize = 0;
-            if ($attachment->path) {
-                if (file_exists($attachment->path)) {
-                    $fileSize = filesize($attachment->path);
-                } else {
-                    $this->logger->warning("Skipping attachment in batch: file not found: {$attachment->path}");
-                    continue;
-                }
-            } elseif ($attachment->content) {
-                $fileSize = strlen($attachment->content);
-            } else {
-                $this->logger->warning("Skipping attachment in batch: has neither path nor content");
-                continue;
-            }
+        foreach ($attachments as $i => $attachment) {
+            $fileSize = $sizes[$i] ?? 0;
 
-            // Check if we need to start a new batch
             $wouldExceedFileLimit = count($currentBatch) >= $maxFilesPerBatch;
             $wouldExceedSizeLimit = ($currentBatchSize + $fileSize) > $maxSizePerBatch;
 
             if ($wouldExceedFileLimit || $wouldExceedSizeLimit) {
-                // Save current batch and start a new one
                 if (!empty($currentBatch)) {
                     $batches[] = $currentBatch;
                     $currentBatch = [];
@@ -384,12 +382,10 @@ class ApiClientV1 implements ClientInterface
                 }
             }
 
-            // Add file to current batch
             $currentBatch[] = $attachment;
             $currentBatchSize += $fileSize;
         }
 
-        // Add the last batch if it's not empty
         if (!empty($currentBatch)) {
             $batches[] = $currentBatch;
         }
@@ -404,102 +400,62 @@ class ApiClientV1 implements ClientInterface
 
     public function getConfigurationGroups(string $code): array
     {
-        try {
+        return $this->tryApiCall('get configuration groups', function () use ($code) {
             $this->logger->debug('Get configuration groups for project: ' . $code);
-
             $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
             $groups = $configApi->getConfigurations($code);
 
             $result = [];
             if ($groups && $groups->getResult() && $groups->getResult()->getEntities()) {
                 foreach ($groups->getResult()->getEntities() as $group) {
-                    $configGroup = new ConfigurationGroup(
-                        $group->getId(),
-                        $group->getTitle()
-                    );
-                    
-                    // Store items for this group if they exist
+                    $configGroup = new ConfigurationGroup($group->getId(), $group->getTitle());
                     if ($group->getConfigurations()) {
                         foreach ($group->getConfigurations() as $item) {
-                            $configGroup->items[] = new ConfigurationItem(
-                                $item->getId(),
-                                $item->getTitle()
-                            );
+                            $configGroup->items[] = new ConfigurationItem($item->getId(), $item->getTitle());
                         }
                     }
-                    
                     $result[] = $configGroup;
                 }
             }
-
             $this->logger->debug('Found ' . count($result) . ' configuration groups');
             return $result;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to get configuration groups: ' . $e->getMessage());
-            return [];
-        }
+        }, []);
     }
 
     public function createConfigurationGroup(string $code, string $title): ?ConfigurationGroup
     {
-        try {
+        return $this->tryApiCall('create configuration group', function () use ($code, $title) {
             $this->logger->debug('Create configuration group: ' . $title);
-
             $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
-
             $model = new ConfigurationGroupCreate();
             $model->setTitle($title);
-
             $group = $configApi->createConfigurationGroup($code, $model);
-            $result = new ConfigurationGroup(
-                $group->getResult()->getId(),
-                $title
-            );
-
+            $result = new ConfigurationGroup($group->getResult()->getId(), $title);
             $this->logger->debug('Configuration group created with id: ' . $result->getId());
             return $result;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to create configuration group: ' . $e->getMessage());
-            return null;
-        }
+        });
     }
-
-
 
     public function createConfigurationItem(string $code, int $groupId, string $title): ?ConfigurationItem
     {
-        try {
+        return $this->tryApiCall('create configuration item', function () use ($code, $groupId, $title) {
             $this->logger->debug('Create configuration item: ' . $title . ' in group: ' . $groupId);
-
             $configApi = new ConfigurationsApi($this->client, $this->clientConfig);
-
             $model = new ConfigurationCreate();
             $model->setTitle($title);
             $model->setGroupId($groupId);
-
             $item = $configApi->createConfiguration($code, $model);
-            $result = new ConfigurationItem(
-                $item->getResult()->getId(),
-                $title
-            );
-
+            $result = new ConfigurationItem($item->getResult()->getId(), $title);
             $this->logger->debug('Configuration item created with id: ' . $result->getId());
             return $result;
-        } catch (Exception $e) {
-            $this->logger->error('Failed to create configuration item: ' . $e->getMessage());
-            return null;
-        }
+        });
     }
 
     public function runUpdateExternalIssue(string $code, string $type, array $links): void
     {
-        try {
+        $this->tryApiCall('update external issue', function () use ($code, $type, $links) {
             $this->logger->debug('Update external issue for project: ' . $code . ', type: ' . $type);
-
-            // Map our enum values to API enum values
             $apiType = $type === 'jiraCloud' ? RunexternalIssues::TYPE_JIRA_CLOUD : RunexternalIssues::TYPE_JIRA_SERVER;
-
-            // Create links array using API models
             $apiLinks = [];
             foreach ($links as $link) {
                 $linkModel = new RunexternalIssuesLinksInner();
@@ -507,53 +463,37 @@ class ApiClientV1 implements ClientInterface
                 $linkModel->setExternalIssue($link['external_issue']);
                 $apiLinks[] = $linkModel;
             }
-
-            // Create the request model
             $runExternalIssues = new RunexternalIssues();
             $runExternalIssues->setType($apiType);
             $runExternalIssues->setLinks($apiLinks);
-
-            $this->logger->debug('External issue update request: ' . json_encode($runExternalIssues));
-
-            // Use the API client
+            if ($this->logger->isDebug()) {
+                $this->logger->debug('External issue update request: ' . json_encode($runExternalIssues));
+            }
             $runApi = new RunsApi($this->client, $this->clientConfig);
             $runApi->runUpdateExternalIssue($code, $runExternalIssues);
-
             $this->logger->info('External issue updated successfully');
-        } catch (Exception $e) {
-            $this->logger->error('Failed to update external issue: ' . $e->getMessage());
-        }
+        });
     }
 
     public function enablePublicReport(string $code, int $runId): ?string
     {
-        try {
+        return $this->tryApiCall('generate public report link', function () use ($code, $runId) {
             $this->logger->debug('Enable public report for run: ' . $runId);
-
-            // Make PATCH request to enable public report
             $response = $this->client->request('PATCH', $this->clientConfig->getHost() . '/run/' . $code . '/' . $runId . '/public', [
                 'headers' => [
                     'Token' => $this->config->api->getToken(),
                     'Content-Type' => 'application/json',
                 ],
-                'json' => [
-                    'status' => true,
-                ],
+                'json' => ['status' => true],
             ]);
-
             $responseData = json_decode($response->getBody()->getContents(), true);
-            
             if (isset($responseData['result']['hash'])) {
                 $publicUrl = $this->appUrl . '/public/report/' . $responseData['result']['hash'];
                 $this->logger->info('Public report link: ' . $publicUrl);
                 return $publicUrl;
             }
-
             $this->logger->warning('Public report hash not found in response');
             return null;
-        } catch (Exception $e) {
-            $this->logger->warning('Failed to generate public report link: ' . $e->getMessage());
-            return null;
-        }
+        }, null, 'warning');
     }
 }

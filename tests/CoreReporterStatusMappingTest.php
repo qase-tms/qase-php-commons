@@ -65,21 +65,21 @@ class CoreReporterStatusMappingTest extends TestCase
         
         // Add steps
         $step1 = new Step();
-        $step1->title = 'Step 1';
-        $step1->status = 'skipped';
-        
+        $step1->data->setAction('Step 1');
+        $step1->execution->setStatus('skipped');
+
         $step2 = new Step();
-        $step2->title = 'Step 2';
-        $step2->status = 'passed';
-        
+        $step2->data->setAction('Step 2');
+        $step2->execution->setStatus('passed');
+
         $result->steps = [$step1, $step2];
-        
+
         // Add result
         $this->coreReporter->addResult($result);
-        
+
         // Check that step statuses were mapped
-        $this->assertEquals('passed', $step1->status);
-        $this->assertEquals('passed', $step2->status); // unchanged
+        $this->assertEquals('passed', $step1->execution->getStatus());
+        $this->assertEquals('passed', $step2->execution->getStatus()); // unchanged
     }
 
     public function testNoMappingWhenEmpty(): void
@@ -113,22 +113,22 @@ class CoreReporterStatusMappingTest extends TestCase
         
         // Add steps
         $step1 = new Step();
-        $step1->title = 'Step 1';
-        $step1->status = 'skipped';
-        
+        $step1->data->setAction('Step 1');
+        $step1->execution->setStatus('skipped');
+
         $step2 = new Step();
-        $step2->title = 'Step 2';
-        $step2->status = 'blocked';
-        
+        $step2->data->setAction('Step 2');
+        $step2->execution->setStatus('blocked');
+
         $result->steps = [$step1, $step2];
-        
+
         // Add result
         $this->coreReporter->addResult($result);
-        
+
         // Check mappings
         $this->assertEquals('failed', $result->execution->status);
-        $this->assertEquals('passed', $step1->status);
-        $this->assertEquals('blocked', $step2->status); // no mapping
+        $this->assertEquals('passed', $step1->execution->getStatus());
+        $this->assertEquals('blocked', $step2->execution->getStatus()); // no mapping
     }
 
     public function testResultAddedToReporter(): void

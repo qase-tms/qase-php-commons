@@ -37,12 +37,7 @@ class ApiClientV2 extends ApiClientV1
         $this->clientV2Config = Configuration::getDefaultConfiguration()
             ->setApiKey('Token', $this->config->api->getToken());
 
-        $host = $this->config->api->getHost();
-        if ($host == 'qase.io') {
-            $this->clientV2Config->setHost('https://api.qase.io/v2');
-        } else {
-            $this->clientV2Config->setHost('https://api-' . $host . '/v2');
-        }
+        $this->clientV2Config->setHost($this->resolveApiHost('v2'));
 
         // Create GuzzleHttp Client with default headers
         $headers = $this->buildHeaders($framework, $reporterName, $hostData);
@@ -59,11 +54,13 @@ class ApiClientV2 extends ApiClientV1
             $model = new CreateResultsRequestV2();
             $convertedResults = [];
             foreach ($results as $result) {
-                $convertedResults[] = $this->covertToModel($result);
+                $convertedResults[] = $this->convertToModel($result);
             }
             $model->setResults($convertedResults);
 
-            $this->logger->debug("Send results to project: " . json_encode($model));
+            if ($this->logger->isDebug()) {
+                $this->logger->debug("Send results to project: " . json_encode($model));
+            }
 
             $resultsApi = new ResultsApi($this->clientV2, $this->clientV2Config);
             $resultsApi->createResultsV2($code, $runId, $model);
@@ -73,7 +70,7 @@ class ApiClientV2 extends ApiClientV1
         }
     }
 
-    private function covertToModel(Result $result): ResultCreate
+    private function convertToModel(Result $result): ResultCreate
     {
         $model = new ResultCreate();
         $model->setTitle($result->title);
@@ -106,7 +103,9 @@ class ApiClientV2 extends ApiClientV1
         }
         $model->setSteps($steps);
 
-        $this->logger->debug("Convert result to model: " . json_encode($model));
+        if ($this->logger->isDebug()) {
+            $this->logger->debug("Convert result to model: " . json_encode($model));
+        }
 
         return $model;
     }
@@ -126,8 +125,8 @@ class ApiClientV2 extends ApiClientV1
         $model->setExecution($executionModel);
 
         $steps = [];
-        foreach ($step->steps as $step) {
-            $steps[] = $this->convertStep($step);
+        foreach ($step->steps as $childStep) {
+            $steps[] = $this->convertStep($childStep);
         }
         $model->setSteps($steps);
 
