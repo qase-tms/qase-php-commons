@@ -257,12 +257,12 @@ class ApiClientV2 extends ApiClientV1
             $xPlatformParts[] = 'arch=' . $hostData['arch'];
         }
         
-        if (!empty($hostData['php'])) {
-            $xPlatformParts[] = 'php=' . $hostData['php'];
+        if (!empty($hostData['language'])) {
+            $xPlatformParts[] = 'php=' . $hostData['language'];
         }
-        
-        if (!empty($hostData['composer'])) {
-            $xPlatformParts[] = 'composer=' . $hostData['composer'];
+
+        if (!empty($hostData['packageManager'])) {
+            $xPlatformParts[] = 'composer=' . $hostData['packageManager'];
         }
 
         if (!empty($xPlatformParts)) {
