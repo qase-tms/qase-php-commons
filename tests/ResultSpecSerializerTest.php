@@ -131,20 +131,36 @@ class ResultSpecSerializerTest extends TestCase
         $this->assertInstanceOf(\stdClass::class, $data['params']);
     }
 
-    public function testParamsWithEmptyValueBecomeEmptyString(): void
+    public function testParamsAssociativeStringValues(): void
     {
         $result = new Result();
         $result->id = 'r1';
         $result->title = 'T';
         $result->params = [
-            ['name' => 'a', 'value' => 'x'],
-            ['name' => 'b', 'value' => null],
-            ['name' => 'c', 'value' => ''],
+            'version' => 'v1',
+            'empty_param' => '',
+            'number' => 42,
         ];
 
         $data = $this->serializer->toSpecArray($result);
         $this->assertIsArray($data['params']);
-        $this->assertSame([['name' => 'a', 'value' => 'x'], ['name' => 'b', 'value' => 'empty'], ['name' => 'c', 'value' => 'empty']], $data['params']);
+        $this->assertSame(['version' => 'v1', 'empty_param' => 'empty', 'number' => '42'], $data['params']);
+    }
+
+    public function testParamsWithArrayItemsExtractValue(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+        $result->params = [
+            'a' => ['value' => 'x'],
+            'b' => ['value' => null],
+            'c' => ['value' => ''],
+        ];
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertIsArray($data['params']);
+        $this->assertSame(['a' => 'x', 'b' => 'empty', 'c' => 'empty'], $data['params']);
     }
 
     public function testParamGroupsWithEmptyValuesBecomeEmptyString(): void

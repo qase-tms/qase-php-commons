@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace Qase\PhpCommons\Models;
 
+use Ramsey\Uuid\Uuid;
 
 final class Attachment extends BaseModel
 {
+    public string $id;
     public ?string $title;
     public ?string $mime;
     public ?string $content;
@@ -14,6 +16,7 @@ final class Attachment extends BaseModel
 
     private function __construct(?string $title = null, ?string $content = null, ?string $mime = null, ?string $path = null)
     {
+        $this->id = Uuid::uuid4()->toString();
         $this->title = $title;
         $this->content = $content;
         $this->mime = $mime;
