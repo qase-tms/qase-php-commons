@@ -1,0 +1,27 @@
+src/Reporters/ResultSpecSerializer.php
+  03d6ea613e1f8418 48-61,101
+tests/ResultSpecSerializerTest.php
+  03d6ea613e1f8418 134,140-142,147-163
+src/Models/Attachment.php
+  03d6ea613e1f8418 7,11,19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "e8aa38b3cc2a81117d62509e37951d7b44bb85f5",
+  "prompts": {
+    "03d6ea613e1f8418": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "a32e4c2f-3d3e-4c2f-aa48-2bde84348d53",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 39,
+      "total_deletions": 14,
+      "accepted_lines": 39,
+      "overriden_lines": 0
+    }
+  }
+}
