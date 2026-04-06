@@ -45,14 +45,20 @@ class ResultSpecSerializer
 
     private function normalizeParams(array $params): array
     {
-        return array_map(function ($item) {
-            $name = is_array($item) ? ($item['name'] ?? '') : ($item->name ?? '');
-            $value = is_array($item) ? ($item['value'] ?? null) : ($item->value ?? null);
-            return [
-                'name' => $name,
-                'value' => ($value === null || $value === '') ? 'empty' : $value,
-            ];
-        }, $params);
+        $result = [];
+        foreach ($params as $key => $item) {
+            if (is_string($item) || is_numeric($item) || is_bool($item)) {
+                $value = (string)$item;
+                $result[$key] = ($value === '') ? 'empty' : $value;
+            } elseif (is_array($item)) {
+                $result[$key] = ($item['value'] ?? null) === null || ($item['value'] ?? null) === ''
+                    ? 'empty'
+                    : (string)$item['value'];
+            } else {
+                $result[$key] = 'empty';
+            }
+        }
+        return $result;
     }
 
     private function normalizeParamGroups(array $paramGroups): array
@@ -92,7 +98,7 @@ class ResultSpecSerializer
                 'file_path' => $attachment->path,
                 'mime_type' => $attachment->mime,
                 'size' => null,
-                'id' => null,
+                'id' => $attachment->id,
             ];
         }
         if (is_array($attachment)) {
