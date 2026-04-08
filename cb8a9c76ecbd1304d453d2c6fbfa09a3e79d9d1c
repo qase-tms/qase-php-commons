@@ -1,0 +1,23 @@
+docs/superpowers/specs/2026-04-08-tags-support-design.md
+  5a5b994b12f18d0f 1-561
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "cb8a9c76ecbd1304d453d2c6fbfa09a3e79d9d1c",
+  "prompts": {
+    "5a5b994b12f18d0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "389bcca0-b191-4168-99c9-88ce7e8f955c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 561,
+      "total_deletions": 0,
+      "accepted_lines": 561,
+      "overriden_lines": 0
+    }
+  }
+}
