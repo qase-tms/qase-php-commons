@@ -1,0 +1,29 @@
+src/Reporters/ResultSpecSerializer.php
+  5a5b994b12f18d0f 20-32,39-40
+src/Models/Result.php
+  5a5b994b12f18d0f 17
+composer.json
+  5a5b994b12f18d0f 43
+tests/ResultSpecSerializerTest.php
+  5a5b994b12f18d0f 40,181-239
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.5",
+  "base_commit_sha": "ee62002a2104d8cbc9e75476dd359defacabcc57",
+  "prompts": {
+    "5a5b994b12f18d0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "389bcca0-b191-4168-99c9-88ce7e8f955c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 1699,
+      "total_deletions": 2,
+      "accepted_lines": 1699,
+      "overriden_lines": 0
+    }
+  }
+}
