@@ -14,6 +14,7 @@ class Result extends BaseModel
     public ?array $testOpsIds = null;
     public ResultExecution $execution;
     public array $fields = [];
+    public array $tags = [];
     public array $attachments = [];
     public array $steps = [];
     public array $params = [];
