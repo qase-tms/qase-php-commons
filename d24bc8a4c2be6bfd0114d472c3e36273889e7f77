@@ -1,0 +1,25 @@
+src/Client/ApiClientV2.php
+  5a5b994b12f18d0f 90-106
+composer.json
+  5a5b994b12f18d0f 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.6",
+  "base_commit_sha": "d24bc8a4c2be6bfd0114d472c3e36273889e7f77",
+  "prompts": {
+    "5a5b994b12f18d0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "389bcca0-b191-4168-99c9-88ce7e8f955c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 18,
+      "total_deletions": 2,
+      "accepted_lines": 1640,
+      "overriden_lines": 0
+    }
+  }
+}
