@@ -87,7 +87,23 @@ class ApiClientV2 extends ApiClientV1
         $execution->setThread($result->execution->getThread());
         $model->setExecution($execution);
 
-        $fields = new ResultCreateFields($result->fields);
+        // Handle tags: merge from result.tags and fields['tags'] fallback
+        $tags = $result->tags;
+        $fieldData = $result->fields;
+
+        if (isset($fieldData['tags']) && is_string($fieldData['tags'])) {
+            $fieldTags = array_map('trim', explode(',', $fieldData['tags']));
+            $fieldTags = array_filter($fieldTags, fn($t) => $t !== '');
+            $tags = array_merge($tags, $fieldTags);
+            unset($fieldData['tags']);
+        }
+
+        $uniqueTags = array_values(array_unique($tags));
+
+        $fields = new ResultCreateFields($fieldData);
+        if ($uniqueTags !== []) {
+            $fields->setTags(implode(',', $uniqueTags));
+        }
         $model->setFields($fields);
 
         $model->setAttachments($this->convertAttachments($result->attachments));

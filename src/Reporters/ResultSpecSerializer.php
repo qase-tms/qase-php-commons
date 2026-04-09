@@ -17,13 +17,27 @@ class ResultSpecSerializer
 {
     public function toSpecArray(Result $result): array
     {
+        // Handle tags: merge from result.tags and fields['tags'] fallback
+        $tags = $result->tags;
+        $fields = $result->fields;
+
+        if (isset($fields['tags']) && is_string($fields['tags'])) {
+            $fieldTags = array_map('trim', explode(',', $fields['tags']));
+            $fieldTags = array_filter($fieldTags, fn($t) => $t !== '');
+            $tags = array_merge($tags, $fieldTags);
+            unset($fields['tags']);
+        }
+
+        $uniqueTags = array_values(array_unique($tags));
+
         $data = [
             'id' => $result->id,
             'title' => $result->title,
             'message' => $result->message ?: null,
             'muted' => $result->muted,
             'signature' => $result->signature,
-            'fields' => $result->fields === [] ? new \stdClass() : $result->fields,
+            'fields' => $fields === [] ? new \stdClass() : $fields,
+            'tags' => $uniqueTags === [] ? null : implode(',', $uniqueTags),
             'params' => $result->params === [] ? new \stdClass() : $this->normalizeParams($result->params),
             'param_groups' => $this->normalizeParamGroups($result->groupParams),
             'testops_id' => $this->firstTestOpsId($result->testOpsIds),

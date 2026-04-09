@@ -37,6 +37,7 @@ class ResultSpecSerializerTest extends TestCase
         $this->assertArrayHasKey('muted', $data);
         $this->assertArrayHasKey('signature', $data);
         $this->assertArrayHasKey('fields', $data);
+        $this->assertArrayHasKey('tags', $data);
         $this->assertArrayHasKey('params', $data);
         $this->assertArrayHasKey('param_groups', $data);
         $this->assertArrayHasKey('testops_id', $data);
@@ -176,5 +177,64 @@ class ResultSpecSerializerTest extends TestCase
 
         $data = $this->serializer->toSpecArray($result);
         $this->assertSame([['a', 'b'], ['empty', 'empty'], ['x', 'empty']], $data['param_groups']);
+    }
+
+    public function testTagsEmptyIsNull(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertArrayHasKey('tags', $data);
+        $this->assertNull($data['tags']);
+    }
+
+    public function testTagsFromResult(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+        $result->tags = ['smoke', 'regression'];
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertSame('smoke,regression', $data['tags']);
+    }
+
+    public function testTagsFromFieldsFallback(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+        $result->fields = ['tags' => 'smoke,regression', 'severity' => 'high'];
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertSame('smoke,regression', $data['tags']);
+        $this->assertIsArray($data['fields']);
+        $this->assertArrayNotHasKey('tags', $data['fields']);
+        $this->assertSame('high', $data['fields']['severity']);
+    }
+
+    public function testTagsMergedAndDeduplicated(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+        $result->tags = ['smoke', 'regression'];
+        $result->fields = ['tags' => 'regression,e2e'];
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertSame('smoke,regression,e2e', $data['tags']);
+    }
+
+    public function testTagsFieldsFallbackTrimsWhitespace(): void
+    {
+        $result = new Result();
+        $result->id = 'r1';
+        $result->title = 'T';
+        $result->fields = ['tags' => ' smoke , regression '];
+
+        $data = $this->serializer->toSpecArray($result);
+        $this->assertSame('smoke,regression', $data['tags']);
     }
 }
