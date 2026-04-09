@@ -30,7 +30,7 @@
   "require": {
     "php": "^8.0",
     "qase/qase-api-client": "^1.1.5",
-    "qase/qase-api-v2-client": "^1.1.2",
+    "qase/qase-api-v2-client": "^1.1.5",
     "ramsey/uuid": "^4.7"
   },
   "require-dev": {
