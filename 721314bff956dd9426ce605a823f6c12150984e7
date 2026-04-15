@@ -1,0 +1,36 @@
+src/Client/ApiClientV1.php
+  77eeb48b1d6daaac 99,188
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "721314bff956dd9426ce605a823f6c12150984e7",
+  "prompts": {
+    "5a5b994b12f18d0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "389bcca0-b191-4168-99c9-88ce7e8f955c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1622,
+      "overriden_lines": 0
+    },
+    "77eeb48b1d6daaac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a5aaf29-033a-43be-b2be-73d927cdcd32",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 10,
+      "total_deletions": 10,
+      "accepted_lines": 2,
+      "overriden_lines": 0
+    }
+  }
+}
