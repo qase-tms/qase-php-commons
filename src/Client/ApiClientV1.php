@@ -96,7 +96,7 @@ class ApiClientV1 implements ClientInterface
             $this->logger->debug('Check project exist: ' . $code);
             $projectsApi = new ProjectsApi($this->client, $this->clientConfig);
             $project = $projectsApi->getProject($code);
-            $result = $project->getStatus() === 200;
+            $result = $project->getStatus() === true;
             if (!$result) {
                 $this->logger->debug('Project not found: ' . $code);
                 return false;
@@ -185,7 +185,7 @@ class ApiClientV1 implements ClientInterface
             $this->logger->debug('Check test run exist: ' . $runId);
             $runApi = new RunsApi($this->client, $this->clientConfig);
             $run = $runApi->getRun($code, $runId);
-            $result = $run->getStatus() === 200;
+            $result = $run->getStatus() === true;
             if (!$result) {
                 $this->logger->debug('Test run not found: ' . $runId);
                 return false;
