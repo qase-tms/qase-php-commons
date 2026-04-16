@@ -93,6 +93,6 @@ class ResultExecution
     public function finish(): void
     {
         $this->endTime = microtime(true);
-        $this->duration = (int)($this->endTime - $this->startTime);
+        $this->duration = (int)(($this->endTime - $this->startTime) * 1000);
     }
 }
