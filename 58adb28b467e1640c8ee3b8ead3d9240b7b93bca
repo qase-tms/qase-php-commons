@@ -1,0 +1,49 @@
+composer.json
+  f30cd2961ab4972b 43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.2.8",
+  "base_commit_sha": "58adb28b467e1640c8ee3b8ead3d9240b7b93bca",
+  "prompts": {
+    "5a5b994b12f18d0f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "389bcca0-b191-4168-99c9-88ce7e8f955c",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 0,
+      "total_deletions": 0,
+      "accepted_lines": 1622,
+      "overriden_lines": 0
+    },
+    "77eeb48b1d6daaac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "9a5aaf29-033a-43be-b2be-73d927cdcd32",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 499,
+      "total_deletions": 0,
+      "accepted_lines": 499,
+      "overriden_lines": 0
+    },
+    "f30cd2961ab4972b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "fc28fb5e-a0b1-420c-be14-7a340cfba8d1",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Dmitrii Gridnev",
+      "messages": [],
+      "total_additions": 260,
+      "total_deletions": 1,
+      "accepted_lines": 260,
+      "overriden_lines": 0
+    }
+  }
+}
