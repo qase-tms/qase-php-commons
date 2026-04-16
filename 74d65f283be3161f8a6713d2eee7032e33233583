@@ -1,0 +1,23 @@
+src/Client/ApiClientV2.php
+  672711893ff1cade 10,52-53,55-71,86-108,110-116,118-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "74d65f283be3161f8a6713d2eee7032e33233583",
+  "prompts": {
+    "672711893ff1cade": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9493fd0-81f2-4db8-b601-95a3e60220a2",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ruslan Abelkharisov",
+      "messages": [],
+      "total_additions": 71,
+      "total_deletions": 2,
+      "accepted_lines": 71,
+      "overriden_lines": 0
+    }
+  }
+}
