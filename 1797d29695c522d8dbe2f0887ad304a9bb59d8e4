@@ -1,0 +1,29 @@
+tests/ResultExecutionTest.php
+  672711893ff1cade 1-49
+tests/StepExecutionTest.php
+  672711893ff1cade 1-37
+src/Models/StepExecution.php
+  672711893ff1cade 73-75
+src/Models/ResultExecution.php
+  672711893ff1cade 96-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.3.0",
+  "base_commit_sha": "1797d29695c522d8dbe2f0887ad304a9bb59d8e4",
+  "prompts": {
+    "672711893ff1cade": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f9493fd0-81f2-4db8-b601-95a3e60220a2",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "Ruslan Abelkharisov",
+      "messages": [],
+      "total_additions": 92,
+      "total_deletions": 2,
+      "accepted_lines": 92,
+      "overriden_lines": 0
+    }
+  }
+}
