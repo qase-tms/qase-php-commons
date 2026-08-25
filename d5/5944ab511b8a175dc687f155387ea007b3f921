@@ -1,0 +1,19 @@
+README.md
+  s_ae3dba0d307cfe::t_dbc3e6195c5b8c 54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "d55944ab511b8a175dc687f155387ea007b3f921",
+  "prompts": {},
+  "sessions": {
+    "s_ae3dba0d307cfe": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c865193d-7019-4aa9-b702-dae72eb24448",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Manju R <cskmnrpt@gmail.com>"
+    }
+  }
+}
