@@ -1,0 +1,56 @@
+tests/RetryPolicyTest.php
+  s_5f86a72fbdcc30::t_7527fe85aecc99 1-247
+tests/TestOpsReporterTest.php
+  s_5f86a72fbdcc30::t_c2b61a3623f095 247-375,393-399
+  s_5f86a72fbdcc30::t_b1f5c619e1a967 400
+tests/ApiRetryConfigTest.php
+  s_5f86a72fbdcc30::t_e25a0f1b78b784 1-66,78-91
+  s_5f86a72fbdcc30::t_560a1da4dece21 67-77
+src/Reporters/TestOpsReporter.php
+  s_5f86a72fbdcc30::t_dcfe3e560cfa2f 13,24-25,82-93,237-243,247-286,288-291,294-297,299
+src/Reporters/CoreReporter.php
+  s_5f86a72fbdcc30::t_f77ea7fee7463b 66-67,74,80-96
+  s_5f86a72fbdcc30::t_62e08fee314d23 97-98
+src/Client/RetryPolicy.php
+  s_5f86a72fbdcc30::t_5bbd368e230e64 1-170
+src/Config/ConfigLoader.php
+  s_5f86a72fbdcc30::t_07d570c050e525 75-77,161-169
+README.md
+  s_5f86a72fbdcc30::t_6e4004ffb714c6 45-47,90-93,145-147,152-168
+  s_5f86a72fbdcc30::t_951e8391863a22 169
+tests/ApiClientV2SendResultsTest.php
+  s_5f86a72fbdcc30::t_94322f4d9fdcc9 1-33,35-47,49-61,63-77,79-90,92-102,104-156,158-160,162-183
+  s_5f86a72fbdcc30::t_bec5bf3184ab64 161
+  s_5f86a72fbdcc30::t_96c4ec718be9e2 34,48,62,78,91,103,157
+composer.json
+  s_5f86a72fbdcc30::t_6e4004ffb714c6 43
+src/Interfaces/ClientInterface.php
+  s_5f86a72fbdcc30::t_6bb40f05498fbb 38-50
+tests/UndeliveredResultsFallbackTest.php
+  s_5f86a72fbdcc30::t_bf61264c2fc456 52,64
+  s_5f86a72fbdcc30::t_dcfe3e560cfa2f 14,68,70,72-73
+  s_5f86a72fbdcc30::t_3e2594bc399cba 1-13,15-51,53-63,65-67,69,71,74-77
+src/Models/Config/ApiConfig.php
+  s_5f86a72fbdcc30::t_07d570c050e525 14-16,18-28,54-58,63-64,66-87,92-95
+  s_5f86a72fbdcc30::t_2ac82e1cdc7d86 9-10,17,59-62,65
+src/Client/ApiClientV1.php
+  s_5f86a72fbdcc30::t_bcd277efde9e36 48-52
+src/Client/ApiClientV2.php
+  s_5f86a72fbdcc30::t_bcd277efde9e36 26,32,43-44,47-49,51-56,59-68,74-75,87-94,97-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "a522196ac657d7acabf2b96811d1cc0a6b634324",
+  "prompts": {},
+  "sessions": {
+    "s_5f86a72fbdcc30": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b102f2e0-86f6-4fc9-b47f-82cf2d3ab19a",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Dmitrii Gridnev <dgridnev@qase.io>"
+    }
+  }
+}
