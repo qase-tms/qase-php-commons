@@ -244,6 +244,135 @@ class TestOpsReporterTest extends TestCase
         $reporter->sendResults();
     }
 
+    public function testFailedChunkStaysInTheBufferAndSendResultsTerminates(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+
+        $calls = 0;
+        $this->clientMock->method('sendResults')
+            ->willReturnCallback(function () use (&$calls) {
+                $calls++;
+                throw new Exception('Connection reset by peer');
+            });
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
+        $reporter->startRun();
+
+        $this->setPrivateProperty($reporter, 'results', ['result1', 'result2', 'result3']);
+
+        try {
+            $reporter->sendResults();
+            $this->fail('sendResults() must report an unrecoverable batch by throwing');
+        } catch (Exception $e) {
+            $this->assertStringContainsString('3', $e->getMessage());
+        }
+
+        $this->assertSame(
+            ['result1', 'result2', 'result3'],
+            $this->getPrivateProperty($reporter, 'results'),
+            'A chunk that was not confirmed by the server must stay in the buffer'
+        );
+        $this->assertSame(1, $calls, 'sendResults() must stop instead of looping over a permanently failed chunk');
+    }
+
+    public function testResultsConfirmedBeforeAFailureAreNotResent(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+
+        $sentChunks = [];
+        $this->clientMock->method('sendResults')
+            ->willReturnCallback(function ($project, $runId, $results) use (&$sentChunks) {
+                $sentChunks[] = $results;
+                if (count($sentChunks) > 1) {
+                    throw new Exception('Connection reset by peer');
+                }
+            });
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
+        $reporter->startRun();
+
+        $this->setPrivateProperty($reporter, 'results', ['result1', 'result2', 'result3', 'result4']);
+
+        try {
+            $reporter->sendResults();
+            $this->fail('sendResults() must report an unrecoverable batch by throwing');
+        } catch (Exception $e) {
+            // expected
+        }
+
+        $this->assertSame([['result1', 'result2'], ['result3', 'result4']], $sentChunks);
+        $this->assertSame(['result3', 'result4'], $this->getPrivateProperty($reporter, 'results'));
+    }
+
+    public function testSendResultsLogsHowManyResultsCouldNotBeSent(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+
+        $this->clientMock->method('sendResults')
+            ->willThrowException(new Exception('Connection reset by peer'));
+
+        $errors = [];
+        $this->loggerMock->method('error')
+            ->willReturnCallback(function ($message) use (&$errors) {
+                $errors[] = $message;
+            });
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
+        $reporter->startRun();
+
+        $this->setPrivateProperty($reporter, 'results', ['result1', 'result2', 'result3']);
+
+        try {
+            $reporter->sendResults();
+        } catch (Exception $e) {
+            // expected
+        }
+
+        $this->assertNotEmpty($errors, 'An unrecoverable batch must be logged as an error');
+        $this->assertStringContainsString('3', implode("\n", $errors));
+    }
+
+    public function testCompleteRunDoesNotCompleteTheRunWhenResultsWereLost(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+
+        $this->clientMock->method('sendResults')
+            ->willThrowException(new Exception('Connection reset by peer'));
+
+        $this->stateMock->expects($this->never())->method('completeRun');
+        $this->clientMock->expects($this->never())->method('completeTestRun');
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
+        $reporter->startRun();
+
+        $this->setPrivateProperty($reporter, 'results', ['result1', 'result2']);
+
+        $this->expectException(Exception::class);
+        $reporter->completeRun();
+    }
+
+    public function testFailedEagerFlushIsNotRepeatedForEverySubsequentResult(): void
+    {
+        $this->stateMock->method('startRun')->willReturn(123);
+
+        $calls = 0;
+        $this->clientMock->method('sendResults')
+            ->willReturnCallback(function () use (&$calls) {
+                $calls++;
+                throw new Exception('Connection reset by peer');
+            });
+
+        $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
+        $reporter->startRun();
+
+        for ($i = 1; $i <= 6; $i++) {
+            $reporter->addResult('result' . $i);
+        }
+
+        $this->assertSame(1, $calls, 'Sending must be deferred to the end of the run after a batch fails');
+        $this->assertCount(6, $this->getPrivateProperty($reporter, 'results'));
+    }
+
     public function testNoResetConfigurationCacheMethod(): void
     {
         $reflection = new ReflectionClass(TestOpsReporter::class);
@@ -259,6 +388,14 @@ class TestOpsReporterTest extends TestCase
         $property = $reflection->getProperty($propertyName);
         $property->setAccessible(true);
         return $property->getValue($object);
+    }
+
+    private function setPrivateProperty(object $object, string $propertyName, $value): void
+    {
+        $reflection = new ReflectionClass($object);
+        $property = $reflection->getProperty($propertyName);
+        $property->setAccessible(true);
+        $property->setValue($object, $value);
     }
 
     private function getConfig(): QaseConfig

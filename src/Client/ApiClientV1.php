@@ -45,7 +45,11 @@ class ApiClientV1 implements ClientInterface
 
         $this->clientConfig->setHost($this->resolveApiHost('v1'));
         $this->appUrl = $this->resolveAppUrl();
-        $this->client = new Client();
+        // A request timeout keeps a stalled connection from hanging the process.
+        $this->client = new Client([
+            'timeout' => $this->config->api->getTimeout(),
+            'connect_timeout' => $this->config->api->getTimeout(),
+        ]);
     }
 
     protected function resolveApiHost(string $version): string
