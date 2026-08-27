@@ -42,6 +42,9 @@ All configuration options are listed in the table below:
 | Token for [API access](https://developers.qase.io/#authentication)                                                         | `testops.api.token`        | `QASE_TESTOPS_API_TOKEN`        | undefined                               | Yes      | Any string                 |
 | Qase API host. For enterprise users, specify address: `example.qase.io`                                           | `testops.api.host`         | `QASE_TESTOPS_API_HOST`         | `qase.io`                               | No       | Any string                 |
 | Qase enterprise environment                                                                                                | `testops.api.enterprise`   | `QASE_TESTOPS_API_ENTERPRISE`   | `False`                                 | No       | `True`, `False`            |
+| API request timeout in seconds                                                                                             | `testops.api.timeout`      | `QASE_TESTOPS_API_TIMEOUT`      | `30`                                    | No       | Any positive integer       |
+| Number of extra attempts for a failed API request                                                                          | `testops.api.retries`      | `QASE_TESTOPS_API_RETRIES`      | `3`                                     | No       | Any non-negative integer   |
+| Base delay between retries in seconds, doubled on every attempt                                                            | `testops.api.retryBackoff` | `QASE_TESTOPS_API_RETRY_BACKOFF`| `1.0`                                   | No       | Any positive number        |
 | Code of your project, which you can take from the URL: `https://app.qase.io/project/DEMOTR` - `DEMOTR` is the project code | `testops.project`          | `QASE_TESTOPS_PROJECT`          | undefined                               | Yes      | Any string                 |
 | Qase test run ID                                                                                                           | `testops.run.id`           | `QASE_TESTOPS_RUN_ID`           | undefined                               | No       | Any integer                |
 | Qase test run title                                                                                                        | `testops.run.title`        | `QASE_TESTOPS_RUN_TITLE`        | `Automated run <Current date and time>` | No       | Any string                 |
@@ -84,7 +87,10 @@ All configuration options are listed in the table below:
   "testops": {
     "api": {
       "token": "<token>",
-      "host": "qase.io"
+      "host": "qase.io",
+      "timeout": 30,
+      "retries": 3,
+      "retryBackoff": 1.0
     },
     "run": {
       "title": "Regress run",
@@ -136,9 +142,30 @@ export QASE_TESTOPS_RUN_EXTERNAL_LINK_TYPE="jiraCloud"
 export QASE_TESTOPS_RUN_EXTERNAL_LINK_URL="PROJ-123"
 export QASE_TESTOPS_SHOW_PUBLIC_REPORT_LINK=true
 export QASE_STATUS_MAPPING="invalid=failed,skipped=passed"
+export QASE_TESTOPS_API_TIMEOUT=30
+export QASE_TESTOPS_API_RETRIES=3
+export QASE_TESTOPS_API_RETRY_BACKOFF=1.0
 ```
 
 The `QASE_TESTOPS_CONFIGURATIONS_VALUES` should be a comma-separated list of key=value pairs.
+
+### Result Delivery
+
+Results are sent to Qase in batches of `testops.batch.size`. A batch stays in the
+reporter buffer until the API confirms it, so a failed request never destroys the
+results it was carrying:
+
+* Transient failures (connection errors, `408`, `429`, `5xx`) are retried
+  `testops.api.retries` times with an exponential backoff. When a `429` response
+  carries a `Retry-After` header, that value is used instead of the computed delay.
+* Permanent failures (`400`, `401`, `403`, `404`, `413`, `422`, `507`) are not
+  retried — they fail the same way on a second attempt.
+* Retrying is safe because every result carries an idempotency key, so a batch
+  that was accepted but whose response was lost is not duplicated.
+* If a batch is still undeliverable after the retries, the reporter logs how many
+  results could not be sent, hands them to the fallback reporter, and **does not
+  complete the test run** — an incomplete run is a visible signal that the data
+  in Qase is partial.
 
 ### How Configurations Work
 

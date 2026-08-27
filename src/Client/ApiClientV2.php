@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Qase\PhpCommons\Client;
 
-use Exception;
 use GuzzleHttp\Client;
 use Qase\APIClientV2\Api\ResultsApi;
 use Qase\APIClientV2\Configuration;
@@ -24,11 +23,13 @@ use Qase\PhpCommons\Models\Relation;
 use Qase\PhpCommons\Models\Result;
 use Qase\PhpCommons\Models\Step;
 use Qase\PhpCommons\Utils\HostInfo;
+use Throwable;
 
 class ApiClientV2 extends ApiClientV1
 {
     private Configuration $clientV2Config;
     private Client $clientV2;
+    private RetryPolicy $retryPolicy;
 
     public function __construct(LoggerInterface $logger, TestopsConfig $config, string $framework = "", string $reporterName = "", array $hostData = [])
     {
@@ -39,18 +40,39 @@ class ApiClientV2 extends ApiClientV1
 
         $this->clientV2Config->setHost($this->resolveApiHost('v2'));
 
-        // Create GuzzleHttp Client with default headers
+        // Create GuzzleHttp Client with default headers and a request timeout,
+        // so that a stalled connection fails instead of hanging at teardown.
         $headers = $this->buildHeaders($framework, $reporterName, $hostData);
         $this->clientV2 = new Client([
-            'headers' => $headers
+            'headers' => $headers,
+            'timeout' => $this->config->api->getTimeout(),
+            'connect_timeout' => $this->config->api->getTimeout(),
         ]);
+
+        $this->retryPolicy = new RetryPolicy(
+            $logger,
+            $this->config->api->getRetries(),
+            $this->config->api->getRetryBackoff()
+        );
     }
 
+    /**
+     * Send a batch of results.
+     *
+     * Transient failures are retried; every attempt carries the same
+     * idempotency keys, so an accepted batch is never duplicated. The failure
+     * is rethrown once it turns out to be unrecoverable: the caller owns the
+     * batch and must be able to tell delivered results from lost ones.
+     *
+     * @throws Throwable
+     */
     public function sendResults(string $code, int $runId, array $results): void
     {
         try {
             $this->logger->debug('Send ' . count($results) . ' results to project: ' . $code . ', run: ' . $runId);
 
+            // The request is built once, outside the retry: converting results
+            // uploads attachments, which must not be repeated on every attempt.
             $model = new CreateResultsRequestV2();
             $convertedResults = [];
             foreach ($results as $result) {
@@ -62,11 +84,18 @@ class ApiClientV2 extends ApiClientV1
                 $this->logger->debug("Send results to project: " . json_encode($model));
             }
 
-            $resultsApi = new ResultsApi($this->clientV2, $this->clientV2Config);
-            $resultsApi->createResultsV2($code, $runId, $model);
-        } catch (Exception $e) {
+            $this->retryPolicy->execute(
+                'send results to project: ' . $code . ', run: ' . $runId,
+                function () use ($code, $runId, $model): void {
+                    $resultsApi = new ResultsApi($this->clientV2, $this->clientV2Config);
+                    $resultsApi->createResultsV2($code, $runId, $model);
+                }
+            );
+        } catch (Throwable $e) {
             $this->logger->error("Error send results to project: " . $code . ', run: ' . $runId);
             $this->logger->error($e->getMessage());
+
+            throw $e;
         }
     }
 

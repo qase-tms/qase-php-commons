@@ -72,6 +72,9 @@ class ConfigLoader
 
         if (isset($data['testops']['api']['token'])) $config->testops->api->setToken($data['testops']['api']['token']);
         if (isset($data['testops']['api']['host'])) $config->testops->api->setHost($data['testops']['api']['host']);
+        if (isset($data['testops']['api']['timeout'])) $config->testops->api->setTimeout((int)$data['testops']['api']['timeout']);
+        if (isset($data['testops']['api']['retries'])) $config->testops->api->setRetries((int)$data['testops']['api']['retries']);
+        if (isset($data['testops']['api']['retryBackoff'])) $config->testops->api->setRetryBackoff((float)$data['testops']['api']['retryBackoff']);
 
         if (isset($data['testops']['run']['id'])) $config->testops->run->setId($data['testops']['run']['id']);
         if (isset($data['testops']['run']['title'])) $config->testops->run->setTitle($data['testops']['run']['title']);
@@ -154,6 +157,15 @@ class ConfigLoader
                     break;
                 case "qase_testops_api_host":
                     $this->config->testops->api->setHost($value);
+                    break;
+                case "qase_testops_api_timeout":
+                    $this->config->testops->api->setTimeout((int)$value);
+                    break;
+                case "qase_testops_api_retries":
+                    $this->config->testops->api->setRetries((int)$value);
+                    break;
+                case "qase_testops_api_retry_backoff":
+                    $this->config->testops->api->setRetryBackoff((float)$value);
                     break;
                 case "qase_testops_run_id":
                     $this->config->testops->run->setId($value);

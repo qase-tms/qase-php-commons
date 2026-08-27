@@ -10,6 +10,7 @@ use Qase\PhpCommons\Interfaces\InternalReporterInterface;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Interfaces\StateInterface;
 use Qase\PhpCommons\Models\Config\QaseConfig;
+use Throwable;
 
 class TestOpsReporter implements InternalReporterInterface
 {
@@ -20,6 +21,8 @@ class TestOpsReporter implements InternalReporterInterface
     private LoggerInterface $logger;
     private ?int $runId = null;
     private ?array $cachedConfigurationGroups = null;
+    private bool $deferFlush = false;
+    private ?Throwable $lastSendError = null;
 
     public function __construct(ClientInterface $client, QaseConfig $config, StateInterface $state, LoggerInterface $logger)
     {
@@ -76,8 +79,18 @@ class TestOpsReporter implements InternalReporterInterface
 
         $this->results[] = $result;
 
-        if (count($this->results) >= $this->config->testops->batch->getSize()) {
-            $this->flushResults();
+        // A batch has already failed: keep buffering and try again once the run
+        // is finished, instead of running the retry ladder on every new result.
+        if ($this->deferFlush) {
+            return;
+        }
+
+        if (count($this->results) < $this->getBatchSize()) {
+            return;
+        }
+
+        if (!$this->flushResults()) {
+            $this->deferFlush = true;
         }
     }
 
@@ -221,17 +234,69 @@ class TestOpsReporter implements InternalReporterInterface
         return $name ? $this->client->getEnvironment($this->config->testops->getProject(), $name) : null;
     }
 
+    /**
+     * Send everything that is still buffered.
+     *
+     * @throws Exception When a batch could not be delivered. The undelivered
+     *                   results stay in the buffer so that the fallback
+     *                   reporter can persist them and the run is left open.
+     */
     public function sendResults(): void
     {
         while (!empty($this->results)) {
-            $this->flushResults();
+            if (!$this->flushResults()) {
+                $lost = count($this->results);
+                $message = sprintf(
+                    'Failed to send %d test result(s) to Qase: the batch was not confirmed by the server.'
+                    . ' The results are kept for the fallback reporter and the test run will not be completed.',
+                    $lost
+                );
+                $this->logger->error($message);
+
+                throw new Exception($message, 0, $this->lastSendError);
+            }
         }
+
+        $this->deferFlush = false;
     }
 
-    private function flushResults(): void
+    /**
+     * Send the head of the buffer.
+     *
+     * The chunk is only removed once the server has confirmed it: an
+     * undelivered batch must stay owned by the reporter, otherwise the results
+     * are destroyed by the very failure they need to survive.
+     *
+     * @return bool True when the batch was accepted by the server
+     */
+    private function flushResults(): bool
     {
-        $chunk = array_splice($this->results, 0, $this->config->testops->batch->getSize());
-        $this->sendResultsByBatch($chunk);
+        $chunk = array_slice($this->results, 0, $this->getBatchSize());
+
+        try {
+            $this->sendResultsByBatch($chunk);
+        } catch (Throwable $e) {
+            $this->lastSendError = $e;
+            $this->logger->warning(sprintf(
+                'Failed to send a batch of %d test result(s): %s. The results are kept in the buffer.',
+                count($chunk),
+                $e->getMessage()
+            ));
+
+            return false;
+        }
+
+        array_splice($this->results, 0, count($chunk));
+
+        return true;
+    }
+
+    /**
+     * Batch size, never below 1: a zero size would make the send loop spin forever.
+     */
+    private function getBatchSize(): int
+    {
+        return max(1, $this->config->testops->batch->getSize());
     }
 
     private function sendResultsByBatch(array $results): void

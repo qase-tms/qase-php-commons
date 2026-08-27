@@ -35,6 +35,19 @@ interface ClientInterface
      */
     public function uploadAttachment(string $code, Attachment|array $attachments): string|array|null;
 
+    /**
+     * Send a batch of results.
+     *
+     * Implementations must retry transient failures and throw once the batch
+     * turns out to be undeliverable, so that the caller can keep ownership of
+     * the results instead of losing them silently.
+     *
+     * @param string $code Project code
+     * @param int $runId Test run ID
+     * @param array $results Results to send
+     * @return void
+     * @throws \Throwable When the batch could not be delivered
+     */
     public function sendResults(string $code, int $runId, array $results): void;
 
     /**

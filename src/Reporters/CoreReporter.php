@@ -63,14 +63,36 @@ class CoreReporter implements ReporterInterface
 
         $this->logger->info('Completing test run');
 
+        $primaryReporter = $this->reporter;
+
         $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED);
         try {
             $this->reporter->completeRun();
         } catch (Exception $e) {
             $this->logger->error('Failed to complete reporter: ' . $e->getMessage());
             $this->runFallbackReporter();
+            $this->completeFallbackRun($primaryReporter);
         } finally {
             error_reporting($previousLevel);
+        }
+    }
+
+    /**
+     * Complete the run on the fallback reporter that has just taken over.
+     *
+     * The fallback received the results the primary reporter could not deliver,
+     * and only completing its run persists them.
+     */
+    private function completeFallbackRun(?InternalReporterInterface $primaryReporter): void
+    {
+        if ($this->reporter === null || $this->reporter === $primaryReporter) {
+            return;
+        }
+
+        try {
+            $this->reporter->completeRun();
+        } catch (Exception $e) {
+            $this->logger->error('Failed to complete fallback reporter: ' . $e->getMessage());
         }
     }
 
