@@ -61,12 +61,24 @@ class ApiClientV1 implements ClientInterface
         return 'https://api-' . $host . '/' . $version;
     }
 
+    // Listed explicitly: enterprise hosts share the `api-<name>.qase.io` shape
+    // but serve the app on `<name>.qase.io`, so a cluster cannot be inferred.
+    private const CLUSTER_APP_HOSTS = [
+        'api-eu.qase.io' => 'app-eu.qase.io',
+    ];
+
     protected function resolveAppUrl(): string
     {
         $host = $this->config->api->getHost();
         if ($host === 'qase.io') {
             return 'https://app.qase.io';
         }
+
+        $apiHost = strtolower('api-' . $host);
+        if (isset(self::CLUSTER_APP_HOSTS[$apiHost])) {
+            return 'https://' . self::CLUSTER_APP_HOSTS[$apiHost];
+        }
+
         return 'https://' . $host;
     }
 
