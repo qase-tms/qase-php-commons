@@ -52,14 +52,23 @@ class TestOpsReporter implements InternalReporterInterface
 
     public function completeRun(): void
     {
-        $this->sendResults();
+        try {
+            $this->sendResults();
+        } catch (Exception $e) {
+            // The run stays open, but this process must still leave the shared state:
+            // otherwise every later invocation keeps reporting into the broken run.
+            $this->state->completeRun(static function (): void {
+            });
 
-        if (!$this->config->testops->run->isComplete()) {
-            return;
+            throw $e;
         }
 
         $this->state->completeRun(
             function () {
+                if (!$this->config->testops->run->isComplete()) {
+                    return;
+                }
+
                 $this->client->completeTestRun($this->config->testops->getProject(), $this->runId);
                 
                 // Enable public report if configured

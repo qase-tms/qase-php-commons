@@ -27,9 +27,8 @@ class ReporterFactory
         $hostInfo = new HostInfo();
         $hostData = $hostInfo->getHostInfo($framework, $reporterName);
         $logger->debug("Host data: " . json_encode($hostData));
-        $state = new StateManager();
-        $reporter = self::createInternalReporter($logger, $config, $state, false, $framework, $reporterName, $hostData);
-        $fallbackReporter = self::createInternalReporter($logger, $config, $state, true, $framework, $reporterName, $hostData);
+        $reporter = self::createInternalReporter($logger, $config, false, $framework, $reporterName, $hostData);
+        $fallbackReporter = self::createInternalReporter($logger, $config, true, $framework, $reporterName, $hostData);
 
         // Create status mapping utility
         $statusMapping = new StatusMapping($logger);
@@ -38,9 +37,11 @@ class ReporterFactory
         return new CoreReporter($logger, $reporter, $fallbackReporter, $config->getRootSuite(), $statusMapping);
     }
 
-    private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, StateInterface $state, bool $fallback = false, string $framework = "", string $reporterName = "", array $hostData = []): ?InternalReporterInterface
+    private static function createInternalReporter(LoggerInterface $logger, QaseConfig $config, bool $fallback = false, string $framework = "", string $reporterName = "", array $hostData = []): ?InternalReporterInterface
     {
         $mode = $fallback ? $config->getFallback() : $config->getMode();
+        // A fallback that shared the primary's state would join its run instead of starting its own report
+        $state = new StateManager(StateManager::defaultFilename($mode), $logger);
 
         if ($mode === 'testops') {
             return self::prepareTestopsReporter($logger, $config, $state, $framework, $reporterName, $hostData);

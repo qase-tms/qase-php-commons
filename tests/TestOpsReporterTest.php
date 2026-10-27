@@ -158,6 +158,10 @@ class TestOpsReporterTest extends TestCase
         $this->clientMock->expects($this->never())
             ->method('completeTestRun');
 
+        $this->stateMock->expects($this->once())
+            ->method('completeRun')
+            ->willReturnCallback(fn (callable $complete) => $complete());
+
         $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
         $reporter->startRun();
         $reporter->completeRun();
@@ -339,7 +343,11 @@ class TestOpsReporterTest extends TestCase
         $this->clientMock->method('sendResults')
             ->willThrowException(new Exception('Connection reset by peer'));
 
-        $this->stateMock->expects($this->never())->method('completeRun');
+        // The process still leaves the shared state, otherwise the next invocation reuses the broken run;
+        // even if it was the last one there, the run itself is not completed.
+        $this->stateMock->expects($this->once())
+            ->method('completeRun')
+            ->willReturnCallback(fn (callable $complete) => $complete());
         $this->clientMock->expects($this->never())->method('completeTestRun');
 
         $reporter = new TestOpsReporter($this->clientMock, $this->config, $this->stateMock, $this->loggerMock);
