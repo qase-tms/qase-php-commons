@@ -29,10 +29,13 @@ class UndeliveredResultsFallbackTest extends TestCase
         $client = $this->createMock(ClientInterface::class);
         $client->method('sendResults')
             ->willThrowException(new Exception('Connection reset by peer'));
+        $client->expects($this->never())->method('completeTestRun');
 
         $state = $this->createMock(StateInterface::class);
         $state->method('startRun')->willReturn(123);
-        $state->expects($this->never())->method('completeRun');
+        $state->expects($this->once())
+            ->method('completeRun')
+            ->willReturnCallback(fn (callable $complete) => $complete());
 
         $config = new QaseConfig();
         $config->testops->setProject('TEST_PROJECT');
