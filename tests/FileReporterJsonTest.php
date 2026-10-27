@@ -6,8 +6,6 @@ namespace Tests;
 
 use PHPUnit\Framework\TestCase;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
-use Qase\PhpCommons\Interfaces\StateInterface;
-use Qase\PhpCommons\Models\Config\ReportConfig;
 use Qase\PhpCommons\Reporters\FileReporter;
 use ReflectionClass;
 
@@ -15,14 +13,18 @@ class FileReporterJsonTest extends TestCase
 {
     public function testMalformedUtf8IsSubstitutedInsteadOfDroppingTheReport(): void
     {
-        $reporter = (new ReflectionClass(FileReporter::class))->newInstanceWithoutConstructor();
+        $reflection = new ReflectionClass(FileReporter::class);
+        $reporter = $reflection->newInstanceWithoutConstructor();
+
         $logger = $this->createMock(LoggerInterface::class);
         $logger->expects($this->never())->method('error');
-        (new ReflectionClass(FileReporter::class))->getProperty('logger')->setValue($reporter, $logger);
+        $property = $reflection->getProperty('logger');
+        $property->setAccessible(true);
+        $property->setValue($reporter, $logger);
 
-        $json = (new ReflectionClass(FileReporter::class))
-            ->getMethod('convertToJson')
-            ->invoke($reporter, ['title' => "\x80\x94 OTP emailed — ok"]);
+        $method = $reflection->getMethod('convertToJson');
+        $method->setAccessible(true);
+        $json = $method->invoke($reporter, ['title' => "\x80\x94 OTP emailed — ok"]);
 
         $this->assertSame("\u{FFFD}\u{FFFD} OTP emailed — ok", json_decode($json, true)['title']);
     }
