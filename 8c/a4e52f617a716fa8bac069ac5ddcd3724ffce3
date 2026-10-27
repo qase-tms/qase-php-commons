@@ -1,0 +1,19 @@
+tests/FileReporterJsonTest.php
+  s_796b29fc5b8e23::t_33a33353ff7ff1 16-18,21-23,25-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8ca4e52f617a716fa8bac069ac5ddcd3724ffce3",
+  "prompts": {},
+  "sessions": {
+    "s_796b29fc5b8e23": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5774f0f0-a977-4639-88a1-b9f8bef6b07b",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Dmitrii Gridnev <dgridnev@qase.io>"
+    }
+  }
+}
