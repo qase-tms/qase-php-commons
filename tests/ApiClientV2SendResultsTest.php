@@ -15,6 +15,7 @@ use Qase\PhpCommons\Client\ApiClientV2;
 use Qase\PhpCommons\Interfaces\LoggerInterface;
 use Qase\PhpCommons\Models\Config\TestopsConfig;
 use Qase\PhpCommons\Models\Result;
+use Qase\PhpCommons\Models\Step;
 use ReflectionClass;
 
 class ApiClientV2SendResultsTest extends TestCase
@@ -108,6 +109,52 @@ class ApiClientV2SendResultsTest extends TestCase
             $body = json_decode((string)$transaction['request']->getBody(), true);
             $this->assertSame($result->id, $body['results'][0]['id']);
         }
+    }
+
+    public function testMalformedUtf8InAResultDoesNotBlockTheBatch(): void
+    {
+        $client = $this->createClient([$this->accepted()]);
+
+        $broken = "\x80\x94 OTP emailed";
+        $result = $this->makeResult();
+        $result->title = $broken;
+        $result->signature = "sig::{$broken}";
+        $result->message = $broken;
+        $result->execution->setStackTrace($broken);
+        $result->fields = ['description' => $broken];
+        $result->tags = [$broken];
+        $result->params = ['email' => $broken];
+        $result->groupParams = [['email']];
+        $result->relations->addSuite($broken);
+
+        $step = new Step();
+        $step->data->setAction($broken);
+        $step->execution->setStatus('passed');
+        $result->steps = [$step];
+
+        $client->sendResults('TEST', 1, [$this->makeResult(), $result]);
+
+        $this->assertCount(1, $this->history);
+        $raw = (string)$this->history[0]['request']->getBody();
+        $this->assertTrue(mb_check_encoding($raw, 'UTF-8'));
+
+        $sent = json_decode($raw, true)['results'][1];
+        $this->assertStringEndsWith(' OTP emailed', $sent['title']);
+        $this->assertStringEndsWith(' OTP emailed', $sent['relations']['suite']['data'][0]['title']);
+        $this->assertStringEndsWith(' OTP emailed', $sent['steps'][0]['data']['action']);
+    }
+
+    public function testValidMultiByteCharactersAreSentUnchanged(): void
+    {
+        $client = $this->createClient([$this->accepted()]);
+
+        $result = $this->makeResult();
+        $result->title = 'issues a challenge — OTP emailed … “quoted”';
+
+        $client->sendResults('TEST', 1, [$result]);
+
+        $sent = json_decode((string)$this->history[0]['request']->getBody(), true)['results'][0];
+        $this->assertSame('issues a challenge — OTP emailed … “quoted”', $sent['title']);
     }
 
     public function testRequestTimeoutIsAppliedToTheHttpClient(): void
