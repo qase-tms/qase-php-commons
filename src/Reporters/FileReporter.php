@@ -122,7 +122,7 @@ class FileReporter implements InternalReporterInterface
     private function convertToJson(array|object $data): string
     {
         try {
-            return json_encode($data, JSON_PRETTY_PRINT | JSON_THROW_ON_ERROR);
+            return json_encode($data, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
         } catch (JsonException $e) {
             $this->logger->error('Failed to convert to JSON: ' . $e->getMessage());
             return '';

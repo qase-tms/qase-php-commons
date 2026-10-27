@@ -23,6 +23,7 @@ use Qase\PhpCommons\Models\Relation;
 use Qase\PhpCommons\Models\Result;
 use Qase\PhpCommons\Models\Step;
 use Qase\PhpCommons\Utils\HostInfo;
+use Qase\PhpCommons\Utils\Utf8;
 use Throwable;
 
 class ApiClientV2 extends ApiClientV1
@@ -102,9 +103,9 @@ class ApiClientV2 extends ApiClientV1
     private function convertToModel(Result $result): ResultCreate
     {
         $model = new ResultCreate();
-        $model->setTitle($result->title);
+        $model->setTitle(Utf8::scrub($result->title));
         $model->setId($result->id);
-        $model->setSignature($result->signature);
+        $model->setSignature(Utf8::scrub($result->signature));
         $model->setTestOpsIds($result->testOpsIds);
 
         $execution = new ResultExecution();
@@ -112,13 +113,13 @@ class ApiClientV2 extends ApiClientV1
         $execution->setStartTime($result->execution->getStartTime());
         $execution->setEndTime($result->execution->getEndTime());
         $execution->setDuration($result->execution->getDuration());
-        $execution->setStacktrace($result->execution->getStackTrace());
-        $execution->setThread($result->execution->getThread());
+        $execution->setStacktrace(Utf8::scrub($result->execution->getStackTrace()));
+        $execution->setThread(Utf8::scrub($result->execution->getThread()));
         $model->setExecution($execution);
 
         // Handle tags: merge from result.tags and fields['tags'] fallback
-        $tags = $result->tags;
-        $fieldData = $result->fields;
+        $tags = Utf8::scrub($result->tags);
+        $fieldData = Utf8::scrub($result->fields);
 
         if (isset($fieldData['tags']) && is_string($fieldData['tags'])) {
             $fieldTags = array_map('trim', explode(',', $fieldData['tags']));
@@ -136,9 +137,9 @@ class ApiClientV2 extends ApiClientV1
         $model->setFields($fields);
 
         $model->setAttachments($this->convertAttachments($result->attachments));
-        $model->setParams($result->params);
-        $model->setParamGroups($result->groupParams);
-        $model->setMessage($result->message);
+        $model->setParams(Utf8::scrub($result->params));
+        $model->setParamGroups(Utf8::scrub($result->groupParams));
+        $model->setMessage(Utf8::scrub($result->message));
         $model->setRelations($this->convertRelations($result->relations));
         $model->setDefect($this->config->isDefect());
 
@@ -160,7 +161,7 @@ class ApiClientV2 extends ApiClientV1
         $model = new ResultStep();
 
         $dataModel = new ResultStepData();
-        $dataModel->setAction($step->data->getAction());
+        $dataModel->setAction(Utf8::scrub($step->data->getAction()));
         $model->setData($dataModel);
 
         $executionModel = new ResultStepExecution();
@@ -187,7 +188,7 @@ class ApiClientV2 extends ApiClientV1
         $data = [];
         foreach ($relation->suite->data as $item) {
             $suiteItem = new RelationSuiteItem();
-            $suiteItem->setTitle($item->title);
+            $suiteItem->setTitle(Utf8::scrub($item->title));
             $data[] = $suiteItem;
         }
 
