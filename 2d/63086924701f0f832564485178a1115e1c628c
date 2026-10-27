@@ -1,0 +1,14 @@
+composer.json
+  h_6d2c9777a42fa4 43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2d63086924701f0f832564485178a1115e1c628c",
+  "prompts": {},
+  "humans": {
+    "h_6d2c9777a42fa4": {
+      "author": "Dmitrii Gridnev <dgridnev@qase.io>"
+    }
+  }
+}
